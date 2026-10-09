@@ -713,9 +713,13 @@
           if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", show); else show();
           return; // la promesa no se resuelve: la app queda en espera
         }
-        var assetsReady = db.collection("assets").get().then(function (snap) {
-          snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
-        }).catch(function (e) { console.warn("assets", e); });
+        // Fotos subidas desde la app: se escuchan en tiempo real
+        var assetsReady = new Promise(function (r) {
+          db.collection("assets").onSnapshot(function (snap) {
+            snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
+            r();
+          }, function (e) { console.warn("assets", e); r(); });
+        });
         // Es administrador si las reglas le permiten escribir
         var adminCheck = db.collection("_permcheck").doc(user.uid).set({ t: Date.now() })
           .then(function () { return true; }).catch(function () { return false; });
