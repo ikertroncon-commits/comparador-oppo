@@ -91,7 +91,11 @@
   [hidden] { display: none !important; }
   .fb-footer { max-width: 640px; margin: 10px auto 40px; padding: 0 20px; text-align: center; }
   .fb-footer button.link-btn { color: var(--ink-faint); font-weight: 600; }
-  .fb-modal { position: fixed; inset: 0; z-index: 50; background: rgba(8,8,14,.72); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .fb-modal { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .fb-gate-logo { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+  .fb-gate-logo strong { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .fb-gate-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 18px; }
+  .fb-modal-card button.primary-btn { width: 100%; }
   .fb-modal-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
   .fb-modal-card h2 { margin: 0 0 14px; font-size: 17px; }
   .fb-modal-card input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 15px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; margin-bottom: 10px; }
@@ -630,18 +634,17 @@
 
 </main>
 
-<div class="fb-footer"><button id="fb-login-open" class="link-btn" type="button">🔒 Acceso administrador</button></div>
+<div class="fb-footer"><button id="fb-logout" class="link-btn" type="button" hidden>Cerrar sesión</button></div>
 <div id="fb-login-modal" class="fb-modal" hidden>
-  <div class="fb-modal-card">
-    <h2>Acceso administrador</h2>
-    <input id="fb-email" type="email" autocomplete="username" placeholder="Correo">
-    <input id="fb-pass" type="password" autocomplete="current-password" placeholder="Contraseña">
+  <form id="fb-login-form" class="fb-modal-card" autocomplete="on">
+    <p class="fb-gate-logo">Comparador <strong>OPPO</strong></p>
+    <p class="fb-gate-sub">Inicia sesión con el usuario que te ha dado tu responsable.</p>
+    <input id="fb-email" type="email" autocomplete="username" placeholder="Correo" required>
+    <input id="fb-pass" type="password" autocomplete="current-password" placeholder="Contraseña" required>
     <p id="fb-error" class="fb-error"></p>
-    <div class="pitch-actions">
-      <button id="fb-login-go" class="primary-btn" type="button">Entrar</button>
-      <button id="fb-login-cancel" class="secondary-btn" type="button">Cancelar</button>
-    </div>
-  </div>
+    <button id="fb-login-go" class="primary-btn" type="submit">Entrar</button>
+    <button id="fb-forgot" class="link-btn" type="button">¿Has olvidado la contraseña?</button>
+  </form>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -702,11 +705,24 @@
       var db = firebase.firestore();
       var auth = firebase.auth();
       var authReady = new Promise(function (r) { var u = auth.onAuthStateChanged(function (user) { u(); r(user); }); });
-      var assetsReady = db.collection("assets").get().then(function (snap) {
-        snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
-      }).catch(function (e) { console.warn("assets", e); });
-      Promise.all([authReady, assetsReady]).then(function (res) {
-        resolve({ db: db, auth: auth, user: res[0] });
+      authReady.then(function (user) {
+        if (!user) {
+          // Sin sesion: se muestra la pantalla de acceso y la app no arranca
+          window.__needLogin = true;
+          var show = function () { if (window.fbShowGate) window.fbShowGate(); };
+          if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", show); else show();
+          return; // la promesa no se resuelve: la app queda en espera
+        }
+        var assetsReady = db.collection("assets").get().then(function (snap) {
+          snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
+        }).catch(function (e) { console.warn("assets", e); });
+        // Es administrador si las reglas le permiten escribir
+        var adminCheck = db.collection("_permcheck").doc(user.uid).set({ t: Date.now() })
+          .then(function () { return true; }).catch(function () { return false; });
+        Promise.all([assetsReady, adminCheck]).then(function (res) {
+          window.__isAdmin = res[1];
+          resolve({ db: db, auth: auth, user: user, isAdmin: res[1] });
+        });
       });
     });
     return ready;
@@ -717,7 +733,7 @@
       var fb = await init();
       if (!fb) return null;
       if (name === "db") return fb.db;
-      if (name === "user") return { canEdit: async function () { return !!fb.auth.currentUser; } };
+      if (name === "user") return { canEdit: async function () { return !!fb.isAdmin; } };
       if (name === "assets") return {
         upload: async function (file) {
           var data = await compressImage(file);
@@ -733,16 +749,16 @@
 
   // ---- acceso de administrador ----
   window.fbLogin = async function (email, pass) {
-    var fb = await init();
-    await fb.auth.signInWithEmailAndPassword(email, pass);
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
     location.reload();
   };
   window.fbLogout = async function () {
-    var fb = await init();
-    await fb.auth.signOut();
+    await firebase.auth().signOut();
     location.reload();
   };
-  window.fbIsLogged = async function () { var fb = await init(); return !!(fb && fb.auth.currentUser); };
+  window.fbResetPassword = async function (email) {
+    await firebase.auth().sendPasswordResetEmail(email);
+  };
 
   // ---- importar copia de seguridad (datos-completos.json) ----
   window.fbImport = async function (json, onProgress) {
@@ -2436,21 +2452,26 @@
 (function () {
   function $(id) { return document.getElementById(id); }
   var modal = $("fb-login-modal");
-  window.fbIsLogged().then(function (logged) {
-    $("fb-login-open").textContent = logged ? "Cerrar sesión de administrador" : "🔒 Acceso administrador";
+  window.fbShowGate = function () { modal.hidden = false; $("fb-email").focus(); };
+  if (window.__needLogin) window.fbShowGate();
+  window.claude.use("db").then(function (db) {
+    if (!db) return;
+    $("fb-logout").hidden = false;
+    $("fb-logout").textContent = window.__isAdmin ? "Cerrar sesión (administrador)" : "Cerrar sesión";
   });
-  $("fb-login-open").addEventListener("click", async function () {
-    if (await window.fbIsLogged()) { window.fbLogout(); return; }
-    $("fb-error").textContent = ""; modal.hidden = false; $("fb-email").focus();
-  });
-  $("fb-login-cancel").addEventListener("click", function () { modal.hidden = true; });
-  async function doLogin() {
-    $("fb-error").textContent = "";
+  $("fb-logout").addEventListener("click", function () { window.fbLogout(); });
+  $("fb-login-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("fb-error").textContent = ""; $("fb-login-go").disabled = true;
     try { await window.fbLogin($("fb-email").value.trim(), $("fb-pass").value); }
-    catch (e) { console.error(e); $("fb-error").textContent = "Correo o contraseña incorrectos."; }
-  }
-  $("fb-login-go").addEventListener("click", doLogin);
-  $("fb-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+    catch (err) { console.error(err); $("fb-error").textContent = "Correo o contraseña incorrectos."; $("fb-login-go").disabled = false; }
+  });
+  $("fb-forgot").addEventListener("click", async function () {
+    var email = $("fb-email").value.trim();
+    if (!email) { $("fb-error").textContent = "Escribe tu correo y vuelve a pulsar."; return; }
+    try { await window.fbResetPassword(email); $("fb-error").textContent = "Te hemos enviado un correo para cambiar la contraseña."; }
+    catch (err) { console.error(err); $("fb-error").textContent = "No se pudo enviar el correo. Revisa la dirección."; }
+  });
   $("fb-import-file").addEventListener("change", async function () {
     var f = this.files && this.files[0]; if (!f) return;
     var st = $("fb-import-status");

@@ -6,7 +6,8 @@ auriculares y glosario de conceptos.
 
 - La app se publica gratis con **GitHub Pages**.
 - Los datos se guardan en **Firebase** (proyecto `versus-oppo`).
-- Los vendedores entran sin contraseña. Solo el administrador puede editar.
+- Todos entran con usuario y contraseña. Los vendedores solo ven; el administrador
+  además puede editar.
 
 ## Contenido
 
@@ -44,18 +45,26 @@ Los datos no están en este repositorio. Se cargan una vez con el archivo
    **Add domain** y añade `TU-USUARIO.github.io`.
 
 ### 4. Cargar los datos
-1. Abre la dirección de la app y pulsa **🔒 Acceso administrador**, al final de
-   la página.
-2. Entra con tu correo y tu contraseña.
+1. Abre la dirección de la app.
+2. Entra con tu correo y tu contraseña de administrador.
 3. Ve a **Administrar → Importar copia de seguridad** y elige el archivo
    `datos-completos.json`.
 4. Espera a que aparezca el mensaje "Listo: … registros importados".
 
-La app ya está lista. Comparte la dirección con los vendedores; para instalarla
-en Android, usa "Añadir a pantalla de inicio" en Chrome.
+### 5. Dar acceso a los vendedores
+1. En Firebase, ve a **Authentication → Usuarios → Agregar usuario**.
+2. Escribe el correo del vendedor y una contraseña, y pulsa **Agregar usuario**.
+3. Pásale al vendedor la dirección de la app, su correo y su contraseña.
+
+Los vendedores pueden ver todo pero no editar. Para quitar el acceso a alguien,
+en la lista de usuarios pulsa los tres puntos de su fila → **Inhabilitar cuenta**
+(o **Borrar cuenta**). Si un vendedor olvida la contraseña, puede pulsar
+"¿Has olvidado la contraseña?" en la pantalla de acceso y recibirá un correo.
+
+Para instalarla en Android, usa "Añadir a pantalla de inicio" en Chrome.
 
 ## Notas
 - Las fotos que subas desde la app se guardan comprimidas dentro de la base de
   datos, así que no hace falta tocar este repositorio para añadir modelos.
-- Cualquiera que tenga el enlace puede ver los datos (igual que los vendedores).
+- Sin usuario y contraseña no se puede ver nada de la app.
 - Para actualizar la app más adelante, basta con sustituir `index.html`.

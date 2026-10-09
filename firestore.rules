@@ -2,8 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      // Cualquiera con el enlace puede ver los datos (vendedores, sin contraseña)
-      allow read: if true;
+      // Solo usuarios con sesion iniciada (vendedores y administrador) pueden ver los datos
+      allow read: if request.auth != null;
       // Solo el administrador puede crear, editar o borrar
       allow write: if request.auth != null && request.auth.uid == "PEGA_AQUI_TU_UID";
     }
