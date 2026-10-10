@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "es.comparadorventas.app",
+        "sha256_cert_fingerprints": ["C4:4A:64:7E:BA:2E:6D:06:1D:E5:27:00:EC:74:38:0A:1F:53:4B:5C:DA:F8:F1:31:E3:57:F7:2E:33:38:DC:67"]
+      }
+    }]
