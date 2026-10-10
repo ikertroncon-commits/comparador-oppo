@@ -2501,5 +2501,33 @@ if ("serviceWorker" in navigator) {
   });
 })();
 </script>
+<script>
+// Gesto "atrás" de Android: vuelve a la pantalla anterior dentro de la app
+(function () {
+  "use strict";
+  var BACKS = ["quick-back-btn", "concepts-back-btn", "section-back-btn", "brand-back-btn"];
+  var armed = false, ignorePop = false;
+  function el(id) { return document.getElementById(id); }
+  function isShown(e) { return !!e && e.offsetParent !== null; }
+  function target() {
+    for (var i = 0; i < BACKS.length; i++) { var b = el(BACKS[i]); if (isShown(b)) return b; }
+    var adm = el("view-admin");
+    if (adm && !adm.hidden) return document.querySelector('.tab-btn[data-tab="compare"]');
+    return null;
+  }
+  function sync() {
+    var t = target();
+    if (t && !armed) { history.pushState({ comparador: 1 }, ""); armed = true; }
+    else if (!t && armed) { armed = false; ignorePop = true; history.back(); }
+  }
+  document.addEventListener("click", function () { setTimeout(sync, 0); }, true);
+  window.addEventListener("popstate", function () {
+    if (ignorePop) { ignorePop = false; return; }
+    armed = false;
+    var t = target();
+    if (t) { t.click(); setTimeout(sync, 0); }
+  });
+})();
+</script>
 </body>
 </html>
