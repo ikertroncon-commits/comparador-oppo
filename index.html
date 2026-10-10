@@ -564,8 +564,15 @@ if ("serviceWorker" in navigator) {
 <main id="view-admin" class="view" hidden>
 
   <section class="admin-section">
+    <h2>Exportar copia de seguridad</h2>
+    <p class="hint">Descarga un archivo con todos los datos (marcas, modelos, comparativas, intereses, relojes y auriculares, conceptos y fotos subidas). Guárdalo en Drive o en tu correo. Hazlo antes de cualquier cambio grande.</p>
+    <button type="button" class="primary-btn" id="fb-export-btn">Descargar copia</button>
+    <p id="fb-export-status" class="fb-import-status"></p>
+  </section>
+
+  <section class="admin-section">
     <h2>Importar copia de seguridad</h2>
-    <p class="hint">Carga el archivo <strong>datos-completos.json</strong> para volcar todos los datos en la base de datos. Úsalo una vez al poner la app en marcha. Si ya existe un registro con el mismo identificador, se sustituye.</p>
+    <p class="hint">Carga una copia descargada arriba (o <strong>datos-completos.json</strong>) para restaurar los datos. Si ya existe un registro con el mismo identificador, se sustituye por el de la copia.</p>
     <input type="file" id="fb-import-file" accept=".json,application/json">
     <p id="fb-import-status" class="fb-import-status"></p>
   </section>
@@ -740,6 +747,26 @@ if ("serviceWorker" in navigator) {
     await firebase.auth().sendPasswordResetEmail(email);
   };
 
+  // ---- exportar copia de seguridad ----
+  window.fbExport = async function () {
+    var fb = await init();
+    var cols = ["brands", "models", "comparisons", "interests", "accessories", "concepts", "assets"];
+    var out = {}, total = 0;
+    for (var ci = 0; ci < cols.length; ci++) {
+      var snap = await fb.db.collection(cols[ci]).get();
+      out[cols[ci]] = {};
+      snap.docs.forEach(function (d) { out[cols[ci]][d.id] = d.data(); total++; });
+    }
+    var blob = new Blob([JSON.stringify(out)], { type: "application/json" });
+    var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "copia-comparador-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "_" + p(d.getHours()) + p(d.getMinutes()) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    return total;
+  };
+
   // ---- importar copia de seguridad (datos-completos.json) ----
   window.fbImport = async function (json, onProgress) {
     var fb = await init();
@@ -747,11 +774,12 @@ if ("serviceWorker" in navigator) {
     var total = 0;
     for (var ci = 0; ci < cols.length; ci++) {
       var col = cols[ci], docs = json[col], ids = Object.keys(docs);
-      for (var i = 0; i < ids.length; i += 400) {
+      var step = col === "assets" ? 5 : 400;
+      for (var i = 0; i < ids.length; i += step) {
         var batch = fb.db.batch();
-        ids.slice(i, i + 400).forEach(function (id) { batch.set(fb.db.collection(col).doc(id), docs[id]); });
+        ids.slice(i, i + step).forEach(function (id) { batch.set(fb.db.collection(col).doc(id), docs[id]); });
         await batch.commit();
-        total += Math.min(400, ids.length - i);
+        total += Math.min(step, ids.length - i);
         if (onProgress) onProgress(total);
       }
     }
@@ -2451,6 +2479,13 @@ if ("serviceWorker" in navigator) {
     if (!email) { $("fb-error").textContent = "Escribe tu correo y vuelve a pulsar."; return; }
     try { await window.fbResetPassword(email); $("fb-error").textContent = "Te hemos enviado un correo para cambiar la contraseña."; }
     catch (err) { console.error(err); $("fb-error").textContent = "No se pudo enviar el correo. Revisa la dirección."; }
+  });
+  $("fb-export-btn").addEventListener("click", async function () {
+    var st = $("fb-export-status"), btn = this;
+    btn.disabled = true; st.textContent = "Preparando copia…";
+    try { var n = await window.fbExport(); st.textContent = "Copia descargada: " + n + " registros. Búscala en Descargas."; }
+    catch (e) { console.error(e); st.textContent = "Error al exportar: " + (e.message || e); }
+    btn.disabled = false;
   });
   $("fb-import-file").addEventListener("change", async function () {
     var f = this.files && this.files[0]; if (!f) return;
