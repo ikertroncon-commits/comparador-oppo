@@ -98,6 +98,11 @@
   .fb-modal-card button.primary-btn { width: 100%; }
   .fb-modal-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
   .fb-modal-card h2 { margin: 0 0 14px; font-size: 17px; }
+  .fb-pass-wrap { position: relative; }
+  .fb-pass-wrap input { padding-right: 46px; }
+  .fb-pass-toggle { position: absolute; right: 4px; top: 2px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0; color: var(--ink-soft); cursor: pointer; border-radius: 8px; }
+  .fb-pass-toggle[aria-pressed="true"] { color: var(--ink); }
+  .fb-pass-toggle[aria-pressed="true"] .eye-slash { display: none; }
   .fb-modal-card input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 15px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; margin-bottom: 10px; }
   .fb-error { color: var(--danger); font-size: 13px; min-height: 18px; margin: 0 0 8px; }
   .fb-import-status { font-size: 13px; color: var(--ink-soft); margin-top: 8px; }
@@ -623,7 +628,10 @@ if ("serviceWorker" in navigator) {
     <p class="fb-gate-logo">Comparador <strong>OPPO</strong></p>
     <p class="fb-gate-sub">Inicia sesión con el usuario que te ha dado tu responsable.</p>
     <input id="fb-email" type="email" autocomplete="username" placeholder="Correo" required>
-    <input id="fb-pass" type="password" autocomplete="current-password" placeholder="Contraseña" required>
+    <div class="fb-pass-wrap">
+      <input id="fb-pass" type="password" autocomplete="current-password" placeholder="Contraseña" required>
+      <button type="button" id="fb-pass-toggle" class="fb-pass-toggle" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line class="eye-slash" x1="3" y1="3" x2="21" y2="21"/></svg></button>
+    </div>
     <p id="fb-error" class="fb-error"></p>
     <button id="fb-login-go" class="primary-btn" type="submit">Entrar</button>
     <button id="fb-forgot" class="link-btn" type="button">¿Has olvidado la contraseña?</button>
@@ -2486,6 +2494,13 @@ if ("serviceWorker" in navigator) {
     try { var n = await window.fbExport(); st.textContent = "Copia descargada: " + n + " registros. Búscala en Descargas."; }
     catch (e) { console.error(e); st.textContent = "Error al exportar: " + (e.message || e); }
     btn.disabled = false;
+  });
+  $("fb-pass-toggle").addEventListener("click", function () {
+    var inp = $("fb-pass"), show = inp.type === "password";
+    inp.type = show ? "text" : "password";
+    this.setAttribute("aria-pressed", show ? "true" : "false");
+    this.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+    inp.focus();
   });
   $("fb-import-file").addEventListener("change", async function () {
     var f = this.files && this.files[0]; if (!f) return;
