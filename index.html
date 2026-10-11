@@ -1019,11 +1019,18 @@ if ("serviceWorker" in navigator) {
     { id: "camaras", label: "📸 Cámaras" },
     { id: "rendimiento", label: "⚡ Rendimiento" },
     { id: "bateria", label: "🔋 Batería" },
-    { id: "otros", label: "📶 Otros" }
+    { id: "software", label: "⚙️ Software" },
+    { id: "conectividad", label: "📶 Conectividad" },
+    { id: "resistencia", label: "🛡️ Resistencia" },
+    { id: "otros", label: "📂 Otros" }
   ];
+  // Conceptos que estaban en "Otros" antes de crear las nuevas categorías
+  var CONCEPT_LEGACY = { "5g": "conectividad", "esim": "conectividad", "nfc": "conectividad", "ip": "resistencia", "milstd810": "resistencia" };
   function conceptSectionId(c) {
-    var ok = CONCEPT_SECTIONS.some(function (s) { return s.id === c.section; });
-    return ok ? c.section : "otros";
+    var sec = c.section;
+    if ((!sec || sec === "otros") && CONCEPT_LEGACY[c.id]) sec = CONCEPT_LEGACY[c.id];
+    var ok = CONCEPT_SECTIONS.some(function (s) { return s.id === sec; });
+    return ok ? sec : "otros";
   }
   function subscribeConcepts() {
     state.db.collection("concepts").onSnapshot(function (snap) {
@@ -1042,7 +1049,7 @@ if ("serviceWorker" in navigator) {
     cats.innerHTML = "";
     CONCEPT_SECTIONS.forEach(function (sec) {
       var count = state.concepts.filter(function (c) { return conceptSectionId(c) === sec.id; }).length;
-      if (sec.id === "otros" && count === 0 && !state.canEdit) return;
+      if (sec.id === "otros" && count === 0) return;
       var parts = sec.label.split(" ");
       var tile = el("button", "category-tile");
       tile.type = "button";
@@ -1110,6 +1117,7 @@ if ("serviceWorker" in navigator) {
     var sel = $("concept-section");
     if (!sel.options.length) {
       CONCEPT_SECTIONS.forEach(function (s) {
+        if (s.id === "otros") return;
         var o = document.createElement("option"); o.value = s.id; o.textContent = s.label; sel.appendChild(o);
       });
     }
