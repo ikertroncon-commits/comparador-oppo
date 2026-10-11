@@ -99,6 +99,11 @@
   .fb-modal-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
   .fb-modal-card h2 { margin: 0 0 14px; font-size: 17px; }
   .fb-pass-wrap { position: relative; }
+  .fb-vendor-list { display: flex; flex-direction: column; gap: 6px; }
+  .fb-vendor-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+  .fb-vendor-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fb-vendor-row button { background: none; border: 0; color: #ff6b6b; font-weight: 700; font-family: var(--font); font-size: 13px; cursor: pointer; flex-shrink: 0; padding: 4px; }
+  .fb-vendor-add { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 14px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; resize: vertical; }
   .fb-newuser input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 15px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; margin-bottom: 10px; }
   .fb-pass-wrap input { padding-right: 46px; }
   .fb-pass-toggle { position: absolute; right: 4px; top: 2px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0; color: var(--ink-soft); cursor: pointer; border-radius: 8px; }
@@ -575,7 +580,7 @@ if ("serviceWorker" in navigator) {
 
   <section class="admin-section">
     <h2>Crear usuario para un vendedor</h2>
-    <p class="hint">Escribe su correo y una contraseña (mínimo 6 caracteres). Podrá entrar al momento y solo podrá consultar, no editar. Para quitarle el acceso, usa la consola de Firebase.</p>
+    <p class="hint">Escribe su correo y una contraseña (mínimo 6 caracteres). Se crea su usuario y queda autorizado: podrá entrar al momento y solo podrá consultar, no editar.</p>
     <form id="fb-newuser-form" class="fb-newuser" autocomplete="off">
       <input id="fb-newuser-email" type="email" placeholder="Correo del vendedor" autocomplete="off" required>
       <div class="fb-pass-wrap">
@@ -585,6 +590,16 @@ if ("serviceWorker" in navigator) {
       <button type="submit" class="primary-btn" id="fb-newuser-go">Crear usuario</button>
     </form>
     <p id="fb-newuser-status" class="fb-import-status"></p>
+  </section>
+
+  <section class="admin-section">
+    <h2>Vendedores autorizados</h2>
+    <p class="hint">Solo pueden entrar en la app los correos de esta lista (además de ti). Si quitas a alguien, deja de poder entrar aunque tenga usuario y contraseña.</p>
+    <div id="fb-vendor-list" class="fb-vendor-list"></div>
+    <p class="hint" style="margin-top:14px">¿Un vendedor que ya tenía usuario? Autoriza su correo aquí (puedes pegar varios, uno por línea):</p>
+    <textarea id="fb-vendor-add" class="fb-vendor-add" rows="3" placeholder="correo1@ejemplo.com&#10;correo2@ejemplo.com"></textarea>
+    <button type="button" class="primary-btn" id="fb-vendor-add-go">Autorizar</button>
+    <p id="fb-vendor-status" class="fb-import-status"></p>
   </section>
 
   <section class="admin-section">
@@ -723,19 +738,43 @@ if ("serviceWorker" in navigator) {
           if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", show); else show();
           return; // la promesa no se resuelve: la app queda en espera
         }
-        // Fotos subidas desde la app: se escuchan en tiempo real
-        var assetsReady = new Promise(function (r) {
-          db.collection("assets").onSnapshot(function (snap) {
-            snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
-            r();
-          }, function (e) { console.warn("assets", e); r(); });
-        });
         // Es administrador si las reglas le permiten escribir
         var adminCheck = db.collection("_permcheck").doc(user.uid).set({ t: Date.now() })
           .then(function () { return true; }).catch(function () { return false; });
-        Promise.all([assetsReady, adminCheck]).then(function (res) {
-          window.__isAdmin = res[1];
-          resolve({ db: db, auth: auth, user: user, isAdmin: res[1] });
+        // Un vendedor solo entra si su correo está en la lista de autorizados
+        var accessCheck = adminCheck.then(function (isAdmin) {
+          if (isAdmin) return true;
+          var email = (user.email || "").toLowerCase();
+          return db.collection("vendedores").doc(email).get()
+            .then(function (d) {
+              if (d && d.exists) return true;
+              // La lista solo se aplica cuando el administrador la ha activado (al autorizar al primero)
+              return db.collection("ajustes").doc("acceso").get()
+                .then(function (a) { return !(a && a.exists && a.data() && a.data().lista === true); })
+                .catch(function () { return false; });
+            })
+            .catch(function (e) { return !(e && e.code === "permission-denied"); });
+        });
+        accessCheck.then(function (allowed) {
+          if (!allowed) {
+            window.__needLogin = true;
+            window.__noAccess = true;
+            auth.signOut().catch(function () {});
+            var show = function () { if (window.fbShowGate) window.fbShowGate(); };
+            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", show); else show();
+            return; // sin acceso: la app no arranca
+          }
+          // Fotos subidas desde la app: se escuchan en tiempo real
+          var assetsReady = new Promise(function (r) {
+            db.collection("assets").onSnapshot(function (snap) {
+              snap.docs.forEach(function (d) { var x = d.data(); if (x && x.data) assetCache[d.id] = x.data; });
+              r();
+            }, function (e) { console.warn("assets", e); r(); });
+          });
+          Promise.all([assetsReady, adminCheck]).then(function (res) {
+            window.__isAdmin = res[1];
+            resolve({ db: db, auth: auth, user: user, isAdmin: res[1] });
+          });
         });
       });
     });
@@ -779,7 +818,27 @@ if ("serviceWorker" in navigator) {
     catch (e) { second = firebase.initializeApp(firebaseConfig, "alta-vendedores"); }
     var cred = await second.auth().createUserWithEmailAndPassword(email, pass);
     try { await second.auth().signOut(); } catch (e) {}
+    await window.fbAuthorize(email);
     return cred && cred.user ? cred.user.uid : null;
+  };
+  // ---- lista de vendedores autorizados ----
+  window.fbAuthorize = async function (email) {
+    var fb = await init();
+    email = String(email || "").trim().toLowerCase();
+    if (!email) return;
+    await fb.db.collection("vendedores").doc(email).set({ email: email, createdAt: Date.now() });
+    await fb.db.collection("ajustes").doc("acceso").set({ lista: true });
+  };
+  window.fbRevoke = async function (email) {
+    var fb = await init();
+    await fb.db.collection("vendedores").doc(String(email).toLowerCase()).delete();
+  };
+  window.fbWatchVendors = async function (cb) {
+    var fb = await init();
+    if (!fb || !fb.isAdmin) return;
+    fb.db.collection("vendedores").onSnapshot(function (snap) {
+      cb(snap.docs.map(function (d) { return d.id; }).sort());
+    }, function (e) { console.warn("vendedores", e); });
   };
 
   window.fbResetPassword = async function (email) {
@@ -2528,6 +2587,9 @@ if ("serviceWorker" in navigator) {
   var modal = $("fb-login-modal");
   window.fbShowGate = function () { modal.hidden = false; $("fb-email").focus(); };
   if (window.__needLogin) window.fbShowGate();
+  if (window.__noAccess) $("fb-error").textContent = "Tu usuario no tiene acceso. Pide a tu responsable que te autorice.";
+  var _showGate = window.fbShowGate;
+  window.fbShowGate = function () { _showGate(); if (window.__noAccess) $("fb-error").textContent = "Tu usuario no tiene acceso. Pide a tu responsable que te autorice."; };
   window.claude.use("db").then(function (db) {
     if (!db) return;
     $("fb-logout").hidden = false;
@@ -2546,6 +2608,31 @@ if ("serviceWorker" in navigator) {
     try { await window.fbResetPassword(email); $("fb-error").textContent = "Te hemos enviado un correo para cambiar la contraseña."; }
     catch (err) { console.error(err); $("fb-error").textContent = "No se pudo enviar el correo. Revisa la dirección."; }
   });
+  window.fbWatchVendors(function (list) {
+    var box = $("fb-vendor-list"); box.innerHTML = "";
+    if (!list.length) { var p = document.createElement("p"); p.className = "hint"; p.textContent = "Todavía no hay vendedores autorizados."; box.appendChild(p); return; }
+    list.forEach(function (email) {
+      var row = document.createElement("div"); row.className = "fb-vendor-row";
+      var s = document.createElement("span"); s.textContent = email; row.appendChild(s);
+      var b = document.createElement("button"); b.type = "button"; b.textContent = "Quitar acceso";
+      b.addEventListener("click", async function () {
+        if (!confirm("¿Quitar el acceso a " + email + "? Dejará de poder entrar en la app.")) return;
+        try { await window.fbRevoke(email); } catch (e) { console.error(e); alert("No se pudo quitar el acceso."); }
+      });
+      row.appendChild(b); box.appendChild(row);
+    });
+  });
+  $("fb-vendor-add-go").addEventListener("click", async function () {
+    var st = $("fb-vendor-status");
+    var emails = $("fb-vendor-add").value.split(/[\s,;]+/).map(function (x) { return x.trim().toLowerCase(); })
+      .filter(function (x) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); });
+    if (!emails.length) { st.textContent = "Escribe al menos un correo válido."; return; }
+    try {
+      for (var i = 0; i < emails.length; i++) await window.fbAuthorize(emails[i]);
+      st.textContent = "✅ Autorizados: " + emails.length + ".";
+      $("fb-vendor-add").value = "";
+    } catch (e) { console.error(e); st.textContent = "No se pudo autorizar: " + (e.message || e); }
+  });
   $("fb-newuser-toggle").addEventListener("click", function () {
     var inp = $("fb-newuser-pass"), show = inp.type === "password";
     inp.type = show ? "text" : "password";
@@ -2554,7 +2641,7 @@ if ("serviceWorker" in navigator) {
   });
   $("fb-newuser-form").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var email = $("fb-newuser-email").value.trim(), pass = $("fb-newuser-pass").value;
+    var email = $("fb-newuser-email").value.trim().toLowerCase(), pass = $("fb-newuser-pass").value;
     var st = $("fb-newuser-status"), btn = $("fb-newuser-go");
     if (pass.length < 6) { st.textContent = "La contraseña debe tener al menos 6 caracteres."; return; }
     btn.disabled = true; st.textContent = "Creando usuario…";
