@@ -195,6 +195,7 @@
   .concept-item[open] summary::after { content: "–"; }
   .concept-item[open] { border-color: rgba(242, 87, 123, 0.45); }
   .concept-body { padding: 0 16px 14px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); white-space: pre-wrap; }
+  .concept-body a { color: var(--accent, #ff8fb1); font-weight: 600; word-break: break-all; }
   .concept-admin { display: flex; gap: 14px; padding: 0 16px 12px; }
   .concept-form {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
@@ -1022,6 +1023,7 @@ if ("serviceWorker" in navigator) {
     { id: "software", label: "⚙️ Software" },
     { id: "conectividad", label: "📶 Conectividad" },
     { id: "resistencia", label: "🛡️ Resistencia" },
+    { id: "webs", label: "🌐 Webs interesantes" },
     { id: "otros", label: "📂 Otros" }
   ];
   // Conceptos que estaban en "Otros" antes de crear las nuevas categorías
@@ -1031,6 +1033,24 @@ if ("serviceWorker" in navigator) {
     if ((!sec || sec === "otros") && CONCEPT_LEGACY[c.id]) sec = CONCEPT_LEGACY[c.id];
     var ok = CONCEPT_SECTIONS.some(function (s) { return s.id === sec; });
     return ok ? sec : "otros";
+  }
+  // Texto del concepto con las direcciones web convertidas en enlaces que se pueden tocar
+  function linkifiedBody(text) {
+    var div = el("div", "concept-body");
+    var re = /(https?:\/\/[^\s]+|www\.[^\s]+)/g, last = 0, m;
+    while ((m = re.exec(text))) {
+      var url = m[0].replace(/[.,;:)»]+$/, "");
+      if (m.index > last) div.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var a = document.createElement("a");
+      a.href = /^https?:/.test(url) ? url : "https://" + url;
+      a.target = "_blank"; a.rel = "noopener"; a.textContent = url;
+      a.addEventListener("click", function (e) { e.stopPropagation(); });
+      div.appendChild(a);
+      last = m.index + url.length;
+      re.lastIndex = last;
+    }
+    if (last < text.length) div.appendChild(document.createTextNode(text.slice(last)));
+    return div;
   }
   function subscribeConcepts() {
     state.db.collection("concepts").onSnapshot(function (snap) {
@@ -1092,7 +1112,7 @@ if ("serviceWorker" in navigator) {
       var item = el("details", "concept-item");
       if (q) item.open = true;
       item.appendChild(el("summary", null, c.term || "(sin título)"));
-      item.appendChild(el("div", "concept-body", c.text || ""));
+      item.appendChild(linkifiedBody(c.text || ""));
       if (state.canEdit) {
         var admin = el("div", "concept-admin");
         var edit = el("button", "link-btn", "Editar");
