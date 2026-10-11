@@ -241,6 +241,9 @@
   }
   .chip.selected { background: var(--gradient); color: #fff; border-color: transparent; }
   .chip.empty-hint { color: var(--ink-faint); font-weight: 500; border-style: dashed; cursor: default; }
+  /* Gamas dentro de cada marca: botones más grandes */
+  #competitor-range-chips, #oppo-range-chips { gap: 10px; }
+  #competitor-range-chips .chip, #oppo-range-chips .chip { font-size: 16px; padding: 15px 24px; min-height: 52px; }
 
   .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .model-card {
