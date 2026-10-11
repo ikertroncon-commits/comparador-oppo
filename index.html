@@ -99,6 +99,7 @@
   .fb-modal-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
   .fb-modal-card h2 { margin: 0 0 14px; font-size: 17px; }
   .fb-pass-wrap { position: relative; }
+  .fb-newuser input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 15px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; margin-bottom: 10px; }
   .fb-pass-wrap input { padding-right: 46px; }
   .fb-pass-toggle { position: absolute; right: 4px; top: 2px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0; color: var(--ink-soft); cursor: pointer; border-radius: 8px; }
   .fb-pass-toggle[aria-pressed="true"] { color: var(--ink); }
@@ -573,6 +574,20 @@ if ("serviceWorker" in navigator) {
 <main id="view-admin" class="view" hidden>
 
   <section class="admin-section">
+    <h2>Crear usuario para un vendedor</h2>
+    <p class="hint">Escribe su correo y una contraseña (mínimo 6 caracteres). Podrá entrar al momento y solo podrá consultar, no editar. Para quitarle el acceso, usa la consola de Firebase.</p>
+    <form id="fb-newuser-form" class="fb-newuser" autocomplete="off">
+      <input id="fb-newuser-email" type="email" placeholder="Correo del vendedor" autocomplete="off" required>
+      <div class="fb-pass-wrap">
+        <input id="fb-newuser-pass" type="password" placeholder="Contraseña" autocomplete="new-password" minlength="6" required>
+        <button type="button" id="fb-newuser-toggle" class="fb-pass-toggle" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line class="eye-slash" x1="3" y1="3" x2="21" y2="21"/></svg></button>
+      </div>
+      <button type="submit" class="primary-btn" id="fb-newuser-go">Crear usuario</button>
+    </form>
+    <p id="fb-newuser-status" class="fb-import-status"></p>
+  </section>
+
+  <section class="admin-section">
     <h2>Exportar copia de seguridad</h2>
     <p class="hint">Descarga un archivo con todos los datos (marcas, modelos, comparativas, intereses, relojes y auriculares, conceptos y fotos subidas). Guárdalo en Drive o en tu correo. Hazlo antes de cualquier cambio grande.</p>
     <button type="button" class="primary-btn" id="fb-export-btn">Descargar copia</button>
@@ -755,6 +770,18 @@ if ("serviceWorker" in navigator) {
     await firebase.auth().signOut();
     location.reload();
   };
+  // ---- crear usuario vendedor sin cerrar la sesión del administrador ----
+  window.fbCreateUser = async function (email, pass) {
+    var fb = await init();
+    if (!fb || !fb.isAdmin) throw new Error("Solo el administrador puede crear usuarios.");
+    var second;
+    try { second = firebase.app("alta-vendedores"); }
+    catch (e) { second = firebase.initializeApp(firebaseConfig, "alta-vendedores"); }
+    var cred = await second.auth().createUserWithEmailAndPassword(email, pass);
+    try { await second.auth().signOut(); } catch (e) {}
+    return cred && cred.user ? cred.user.uid : null;
+  };
+
   window.fbResetPassword = async function (email) {
     await firebase.auth().sendPasswordResetEmail(email);
   };
@@ -2518,6 +2545,33 @@ if ("serviceWorker" in navigator) {
     if (!email) { $("fb-error").textContent = "Escribe tu correo y vuelve a pulsar."; return; }
     try { await window.fbResetPassword(email); $("fb-error").textContent = "Te hemos enviado un correo para cambiar la contraseña."; }
     catch (err) { console.error(err); $("fb-error").textContent = "No se pudo enviar el correo. Revisa la dirección."; }
+  });
+  $("fb-newuser-toggle").addEventListener("click", function () {
+    var inp = $("fb-newuser-pass"), show = inp.type === "password";
+    inp.type = show ? "text" : "password";
+    this.setAttribute("aria-pressed", show ? "true" : "false");
+    this.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+  });
+  $("fb-newuser-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var email = $("fb-newuser-email").value.trim(), pass = $("fb-newuser-pass").value;
+    var st = $("fb-newuser-status"), btn = $("fb-newuser-go");
+    if (pass.length < 6) { st.textContent = "La contraseña debe tener al menos 6 caracteres."; return; }
+    btn.disabled = true; st.textContent = "Creando usuario…";
+    try {
+      await window.fbCreateUser(email, pass);
+      st.textContent = "✅ Usuario creado: " + email + ". Ya puede entrar con esa contraseña.";
+      $("fb-newuser-email").value = ""; $("fb-newuser-pass").value = "";
+    } catch (err) {
+      console.error(err);
+      var c = (err && err.code) || "";
+      st.textContent = c === "auth/email-already-in-use" ? "Ese correo ya tiene usuario." :
+        c === "auth/invalid-email" ? "El correo no es válido." :
+        c === "auth/weak-password" ? "La contraseña es demasiado débil (mínimo 6 caracteres)." :
+        c === "auth/operation-not-allowed" || c === "auth/admin-restricted-operation" ? "Firebase no permite crear usuarios desde la app. Hay que activarlo en la consola." :
+        "No se pudo crear el usuario: " + (err.message || err);
+    }
+    btn.disabled = false;
   });
   $("fb-export-btn").addEventListener("click", async function () {
     var st = $("fb-export-status"), btn = this;
