@@ -392,6 +392,13 @@
   .pitch-label { font-size: 12px; font-weight: 700; color: var(--green-deep); margin: 0 0 8px; }
   .pitch-text { font-size: 14.5px; line-height: 1.55; margin: 0; white-space: pre-wrap; }
   .pitch-text.empty { color: var(--ink-faint); font-style: italic; }
+  .pitch-text.pitch-list { white-space: normal; display: flex; flex-direction: column; gap: 10px; }
+  .pitch-item { display: flex; align-items: flex-start; gap: 12px; }
+  .pitch-intro { display: block; color: var(--ink-soft); }
+  .pitch-ic { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--green-tint); color: var(--green-deep); }
+  .pitch-ic svg { width: 19px; height: 19px; }
+  .pitch-tx { padding-top: 6px; }
   .pitch-card textarea {
     width: 100%; min-height: 90px; font-family: var(--font); font-size: 14px;
     border: 1px solid var(--border); border-radius: 10px; padding: 10px;
@@ -2035,7 +2042,7 @@ if ("serviceWorker" in navigator) {
     var comments = entry && entry.comments;
     var textEl = $("interest-pitch-text");
     if (comments) {
-      textEl.textContent = comments;
+      renderPitch(textEl, comments);
       textEl.classList.remove("empty");
     } else {
       textEl.textContent = state.canEdit
@@ -2495,7 +2502,7 @@ if ("serviceWorker" in navigator) {
       state.currentComparisonData = data;
       var textEl = $("pitch-text");
       if (data && data.comments) {
-        textEl.textContent = data.comments;
+        renderPitch(textEl, data.comments);
         textEl.classList.remove("empty");
       } else {
         textEl.textContent = state.canEdit
@@ -2504,6 +2511,68 @@ if ("serviceWorker" in navigator) {
         textEl.classList.add("empty");
       }
     }, function (err) { console.error("comparison error", err); });
+  }
+
+  // ---------- argumento de venta con iconos ----------
+  var PITCH_ICONS = {
+    camara: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    procesador: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>',
+    bateria: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/><path d="M5 10v4M8 10v4M11 10v4"/></svg>',
+    carga: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+    pantalla: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>',
+    resistencia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>',
+    memoria: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v10H4z"/><path d="M8 7V4M12 7V4M16 7V4M8 20v-3M12 20v-3M16 20v-3"/></svg>',
+    precio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+    software: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>',
+    conectividad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>',
+    sonido: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>',
+    ia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+  };
+  var PITCH_RULES = [
+    ["carga", /\bcarga|cargador|\d+\s?w\b|watio/i],
+    ["bateria", /bater|mah|autonom|duraci|consum|ciclos|eficiencia/i],
+    ["camara", /c[aá]mara|foto|zoom|mpx|\bmp\b|sensor|teleobjetivo|v[ií]deo|selfi|sefie|gran angular|estabiliz|\b4k\b|nocturn|retrato/i],
+    ["procesador", /procesador|chip|snapdragon|dimensity|helio|exynos|tensor|rendimiento|potencia|\bnm\b|gaming|juego/i],
+    ["memoria", /\bram\b/i],
+    ["pantalla", /pantalla|brillo|nits|hz\b|refresco|fluidez|amoled|oled|lcd|resoluci|hdr/i],
+    ["resistencia", /reparaci|\bip\b|\bip\s?\d|agua|polvo|resisten|militar|mil-std|ca[ií]da|cristal|gorilla/i],
+    ["memoria", /almacenamiento|gb\b|\btb\b|\brom\b|memoria|micro ?sd|tarjeta/i],
+    ["precio", /precio|€|euro|barat|financ|oferta|cuota|up ?selling/i],
+    ["ia", /\bia\b|inteligencia artificial|gemini/i],
+    ["software", /actualizaci|parche|android|software|coloros|garant/i],
+    ["conectividad", /\b5g\b|wifi|wi-fi|nfc|esim|bluetooth|cobertura|antena|se[nñ]al/i],
+    ["sonido", /altavoz|sonido|audio|dolby atmos/i]
+  ];
+  function pitchIcon(line) {
+    for (var i = 0; i < PITCH_RULES.length; i++) if (PITCH_RULES[i][1].test(line)) return PITCH_RULES[i][0];
+    return "ok";
+  }
+  // Si el texto viene en líneas con guion (- …) se muestra como lista con un icono según el tema de cada línea
+  function renderPitch(textEl, text) {
+    textEl.innerHTML = "";
+    var lines = String(text).split(/\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l; });
+    var bulleted = lines.some(function (l) { return /^[-•*·]/.test(l); });
+    if (!bulleted) { textEl.textContent = text; textEl.classList.remove("pitch-list"); return; }
+    textEl.classList.add("pitch-list");
+    lines.forEach(function (l) {
+      var isItem = /^[-•*·]/.test(l);
+      var clean = l.replace(/^[-•*·]+\s*/, "");
+      var row = document.createElement("span");
+      row.className = isItem ? "pitch-item" : "pitch-intro";
+      if (isItem) {
+        var ic = document.createElement("span");
+        var kind = pitchIcon(clean);
+        ic.className = "pitch-ic pi-" + kind;
+        ic.innerHTML = PITCH_ICONS[kind];
+        row.appendChild(ic);
+      }
+      var tx = document.createElement("span");
+      tx.className = "pitch-tx";
+      tx.textContent = clean;
+      row.appendChild(tx);
+      textEl.appendChild(row);
+    });
   }
 
   function setupPitchEditor() {
