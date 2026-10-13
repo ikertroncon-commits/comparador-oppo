@@ -335,6 +335,8 @@
   #competitor-range-chips, #oppo-range-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
   #competitor-range-chips .chip, #oppo-range-chips .chip { font-size: 16px; padding: 14px 12px; min-height: 52px; width: 100%; justify-content: center; text-align: center; }
   /* Avisos dentro de la lista de modelos: a todo el ancho, no como botón */
+  /* El contador de datos (9/10 datos) solo lo ve el administrador */
+  html:not(.es-admin) .m-count { display: none; }
   .model-grid > .empty-hint { grid-column: 1 / -1; display: block; width: 100%; text-align: center; border-radius: 14px; padding: 14px 16px; }
 
   .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1238,6 +1240,7 @@ if ("serviceWorker" in navigator) {
 
     if (user) {
       try { state.canEdit = !!(await user.canEdit()); } catch (e) { state.canEdit = false; }
+      document.documentElement.classList.toggle("es-admin", state.canEdit);
     }
 
     if (state.canEdit) {
@@ -1579,7 +1582,7 @@ if ("serviceWorker" in navigator) {
       var grid = el("div", "model-grid");
       ms.forEach(function (m) {
         var card = buildModelCard(m, false, false);
-        var sub = card.querySelector(".m-sub"); if (sub) sub.textContent = m.range || "";
+        var sub = card.querySelector(".m-sub"); if (sub) { sub.textContent = m.range || ""; sub.classList.remove("m-count"); }
         card.addEventListener("click", function () { openRivalComparison(m, oppo); });
         grid.appendChild(card);
       });
@@ -2115,7 +2118,7 @@ if ("serviceWorker" in navigator) {
     }
     card.appendChild(el("span", "m-name", accessory.name));
     var filled = category.specFields.filter(function (f) { return accessory.specs && accessory.specs[f]; }).length;
-    card.appendChild(el("span", "m-sub", filled + "/" + category.specFields.length + " datos"));
+    card.appendChild(el("span", "m-sub m-count", filled + "/" + category.specFields.length + " datos"));
     return card;
   }
 
@@ -2427,7 +2430,7 @@ if ("serviceWorker" in navigator) {
     var name = el("span", "m-name", model.name);
     card.appendChild(name);
     var filled = SPEC_FIELDS.filter(function (f) { return model.specs && model.specs[f]; }).length;
-    card.appendChild(el("span", "m-sub", filled + "/" + SPEC_FIELDS.length + " datos"));
+    card.appendChild(el("span", "m-sub m-count", filled + "/" + SPEC_FIELDS.length + " datos"));
     return card;
   }
 
