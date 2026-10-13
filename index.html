@@ -2822,7 +2822,7 @@ if ("serviceWorker" in navigator) {
       case "RAM": case "Almacenamiento":
         re = /(\d+(?:\.\d+)?)\s*(gb|tb)/g; return cmp(maxOf(nums(re, c)), maxOf(nums(/(\d+(?:\.\d+)?)\s*(gb|tb)/g, o)));
       case "Batería":
-        return cmp(maxOf(nums(/(\d{3,5})\s*(mah)?/g, c)), maxOf(nums(/(\d{3,5})\s*(mah)?/g, o)), 50);
+        return cmp(maxOf(nums(/(\d{3,5})\s*(mah)?/g, c)), maxOf(nums(/(\d{3,5})\s*(mah)?/g, o))); // aunque sea por poco, cuenta
       case "Carga rápida":
         return cmp(maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, c)), maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, o)));
       case "Cámara principal": case "Cámara frontal":
@@ -2959,10 +2959,11 @@ if ("serviceWorker" in navigator) {
 
   // Cámaras: no se comparan por megapíxeles, sino por lo que dice el argumento de venta.
   // «Mejor selfie / cámara frontal / selfie con más resolución» → gana la cámara frontal del OPPO.
-  // «Mejor apartado / sistema fotográfico», «comparar las cámaras traseras…» → gana la cámara principal del OPPO.
+  // «Mejor apartado / sistema fotográfico», «comparar las cámaras traseras…», mejoras de vídeo, estabilizador,
+  // teleobjetivo, gran angular o zoom → gana la cámara principal del OPPO.
   var CAMERA_PITCH_RULES = {
     "Cámara frontal": /selfie|sefie|selfi\b|c[aá]mara frontal/i,
-    "Cámara principal": /apartado fotogr|sistema fotogr|post ?procesado|c[aá]maras traseras|comparar las c[aá]maras/i
+    "Cámara principal": /apartado fotogr|sistema fotogr|post ?procesado|c[aá]maras traseras|comparar las c[aá]maras|grab|v[ií]deo|estabiliz|teleobjetivo|gran angular|zoom|\b4k\b/i
   };
   function markCamerasFromPitch(text) {
     var lines = String(text || "").split(/\n/);
