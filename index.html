@@ -101,7 +101,11 @@
   .fb-pass-wrap { position: relative; }
   .fb-vendor-list { display: flex; flex-direction: column; gap: 6px; }
   .fb-vendor-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
-  .fb-vendor-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fb-vendor-row { flex-wrap: wrap; }
+  .fb-vendor-info { display: flex; flex-direction: column; min-width: 0; flex: 1 1 160px; }
+  .fb-vendor-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fb-vendor-info small { color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
+  .fb-vendor-row button.fb-release { color: var(--ink-soft); }
   .fb-vendor-row button { background: none; border: 0; color: #ff6b6b; font-weight: 700; font-family: var(--font); font-size: 13px; cursor: pointer; flex-shrink: 0; padding: 4px; }
   .fb-vendor-add { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 14px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; resize: vertical; }
   .fb-newuser input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 15px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; margin-bottom: 10px; }
@@ -657,7 +661,7 @@ if ("serviceWorker" in navigator) {
 
   <section class="admin-section">
     <h2>Vendedores autorizados</h2>
-    <p class="hint">Solo pueden entrar en la app los correos de esta lista (además de ti). Si quitas a alguien, deja de poder entrar aunque tenga usuario y contraseña.</p>
+    <p class="hint">Solo pueden entrar en la app los correos de esta lista (además de ti). Cada vendedor queda vinculado al primer móvil en el que entra; si cambia de móvil, pulsa «Liberar móvil». Si quitas a alguien, deja de poder entrar aunque tenga usuario y contraseña.</p>
     <div id="fb-vendor-list" class="fb-vendor-list"></div>
     <p class="hint" style="margin-top:14px">¿Un vendedor que ya tenía usuario? Autoriza su correo aquí (puedes pegar varios, uno por línea):</p>
     <textarea id="fb-vendor-add" class="fb-vendor-add" rows="3" placeholder="correo1@ejemplo.com&#10;correo2@ejemplo.com"></textarea>
@@ -783,6 +787,26 @@ if ("serviceWorker" in navigator) {
     });
   }
 
+  // Identificador propio de este dispositivo (se guarda en el propio móvil)
+  function deviceId() {
+    var k = "comparador-dispositivo", id = null;
+    try { id = localStorage.getItem(k); } catch (e) {}
+    if (!id) {
+      id = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      try { localStorage.setItem(k, id); } catch (e) {}
+    }
+    return id;
+  }
+  function deviceLabel() {
+    var ua = navigator.userAgent || "";
+    var m = ua.match(/Android [\d.]+; ([^;)]+)/);
+    if (m) return m[1].replace(/ Build.*/, "").trim();
+    if (/iPhone/.test(ua)) return "iPhone";
+    if (/Windows/.test(ua)) return "Ordenador Windows";
+    if (/Mac OS/.test(ua)) return "Mac";
+    return "Otro dispositivo";
+  }
+
   var ready = null;
   function init() {
     if (ready) return ready;
@@ -818,7 +842,35 @@ if ("serviceWorker" in navigator) {
             })
             .catch(function (e) { return !(e && e.code === "permission-denied"); });
         });
-        accessCheck.then(function (allowed) {
+        // Un vendedor solo puede usar la app en un dispositivo
+        var deviceCheck = accessCheck.then(function (allowed) {
+          if (!allowed) return "sin-acceso";
+          return adminCheck.then(function (isAdmin) {
+            if (isAdmin) return "ok";
+            var email = (user.email || "").toLowerCase();
+            var myId = deviceId();
+            var ref = db.collection("dispositivos").doc(email);
+            return ref.get().then(function (d) {
+              if (d && d.exists) return (d.data() && d.data().id === myId) ? "ok" : "otro-dispositivo";
+              return ref.set({ id: myId, email: email, desde: Date.now(), equipo: deviceLabel() })
+                .then(function () { return "ok"; })
+                .catch(function () { return "ok"; }); // reglas antiguas: no se puede registrar todavía
+            }).catch(function (e) { return (e && e.code === "permission-denied") ? "ok" : "ok"; });
+          });
+        });
+        deviceCheck.then(function (res) {
+          if (res === "otro-dispositivo") {
+            window.__needLogin = true;
+            window.__noAccess = true;
+            window.__otherDevice = true;
+            auth.signOut().catch(function () {});
+            var showD = function () { if (window.fbShowGate) window.fbShowGate(); };
+            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showD); else showD();
+            return;
+          }
+          return accessCheck;
+        }).then(function (allowed) {
+          if (allowed === undefined) return;
           if (!allowed) {
             window.__needLogin = true;
             window.__noAccess = true;
@@ -895,6 +947,18 @@ if ("serviceWorker" in navigator) {
   window.fbRevoke = async function (email) {
     var fb = await init();
     await fb.db.collection("vendedores").doc(String(email).toLowerCase()).delete();
+    try { await fb.db.collection("dispositivos").doc(String(email).toLowerCase()).delete(); } catch (e) {}
+  };
+  window.fbWatchDevices = async function (cb) {
+    var fb = await init();
+    if (!fb || !fb.isAdmin) return;
+    fb.db.collection("dispositivos").onSnapshot(function (snap) {
+      var map = {}; snap.docs.forEach(function (d) { map[d.id] = d.data(); }); cb(map);
+    }, function (e) { console.warn("dispositivos", e); });
+  };
+  window.fbReleaseDevice = async function (email) {
+    var fb = await init();
+    await fb.db.collection("dispositivos").doc(String(email).toLowerCase()).delete();
   };
   window.fbWatchVendors = async function (cb) {
     var fb = await init();
@@ -2950,9 +3014,14 @@ if ("serviceWorker" in navigator) {
   var modal = $("fb-login-modal");
   window.fbShowGate = function () { modal.hidden = false; $("fb-email").focus(); };
   if (window.__needLogin) window.fbShowGate();
-  if (window.__noAccess) $("fb-error").textContent = "Tu usuario no tiene acceso. Pide a tu responsable que te autorice.";
+  function gateMsg() {
+    if (window.__otherDevice) return "Usuario registrado en otro dispositivo. Si has cambiado de móvil, pide a tu responsable que lo libere.";
+    if (window.__noAccess) return "Tu usuario no tiene acceso. Pide a tu responsable que te autorice.";
+    return "";
+  }
+  if (gateMsg()) $("fb-error").textContent = gateMsg();
   var _showGate = window.fbShowGate;
-  window.fbShowGate = function () { _showGate(); if (window.__noAccess) $("fb-error").textContent = "Tu usuario no tiene acceso. Pide a tu responsable que te autorice."; };
+  window.fbShowGate = function () { _showGate(); if (gateMsg()) $("fb-error").textContent = gateMsg(); };
   window.claude.use("db").then(function (db) {
     if (!db) return;
     $("fb-logout").hidden = false;
@@ -2971,12 +3040,30 @@ if ("serviceWorker" in navigator) {
     try { await window.fbResetPassword(email); $("fb-error").textContent = "Te hemos enviado un correo para cambiar la contraseña."; }
     catch (err) { console.error(err); $("fb-error").textContent = "No se pudo enviar el correo. Revisa la dirección."; }
   });
-  window.fbWatchVendors(function (list) {
+  var vendorList = [], deviceMap = {};
+  window.fbWatchDevices(function (map) { deviceMap = map; renderVendors(); });
+  window.fbWatchVendors(function (list) { vendorList = list; renderVendors(); });
+  function renderVendors() {
+    var list = vendorList;
     var box = $("fb-vendor-list"); box.innerHTML = "";
     if (!list.length) { var p = document.createElement("p"); p.className = "hint"; p.textContent = "Todavía no hay vendedores autorizados."; box.appendChild(p); return; }
     list.forEach(function (email) {
       var row = document.createElement("div"); row.className = "fb-vendor-row";
-      var s = document.createElement("span"); s.textContent = email; row.appendChild(s);
+      var info = document.createElement("div"); info.className = "fb-vendor-info";
+      var s = document.createElement("span"); s.textContent = email; info.appendChild(s);
+      var dev = deviceMap[email];
+      var small = document.createElement("small");
+      small.textContent = dev ? "📱 " + (dev.equipo || "Dispositivo") + (dev.desde ? " · desde " + new Date(dev.desde).toLocaleDateString("es-ES") : "") : "Sin dispositivo vinculado todavía";
+      info.appendChild(small);
+      row.appendChild(info);
+      if (dev) {
+        var rel = document.createElement("button"); rel.type = "button"; rel.className = "fb-release"; rel.textContent = "Liberar móvil";
+        rel.addEventListener("click", async function () {
+          if (!confirm("¿Liberar el dispositivo de " + email + "? Podrá entrar desde un móvil nuevo (el primero en el que entre quedará vinculado).")) return;
+          try { await window.fbReleaseDevice(email); } catch (e) { console.error(e); alert("No se pudo liberar."); }
+        });
+        row.appendChild(rel);
+      }
       var b = document.createElement("button"); b.type = "button"; b.textContent = "Quitar acceso";
       b.addEventListener("click", async function () {
         if (!confirm("¿Quitar el acceso a " + email + "? Dejará de poder entrar en la app.")) return;
@@ -2984,7 +3071,7 @@ if ("serviceWorker" in navigator) {
       });
       row.appendChild(b); box.appendChild(row);
     });
-  });
+  }
   $("fb-vendor-add-go").addEventListener("click", async function () {
     var st = $("fb-vendor-status");
     var emails = $("fb-vendor-add").value.split(/[\s,;]+/).map(function (x) { return x.trim().toLowerCase(); })

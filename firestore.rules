@@ -17,6 +17,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Dispositivo vinculado de cada vendedor: lo registra él la primera vez; solo el administrador lo libera
+    match /dispositivos/{email} {
+      allow read: if isAdmin() || (signedIn() && request.auth.token.email.lower() == email);
+      allow create: if signedIn() && request.auth.token.email.lower() == email;
+      allow update, delete: if isAdmin();
+    }
+
     // Ajustes de acceso (si la lista está activada)
     match /ajustes/{doc} {
       allow read: if signedIn();
@@ -25,7 +32,7 @@ service cloud.firestore {
 
     // Resto de datos: solo administrador y vendedores autorizados pueden verlos; solo el administrador los cambia
     match /{col}/{doc=**} {
-      allow read: if col != "vendedores" && (isAdmin() || isVendor());
+      allow read: if col != "vendedores" && col != "dispositivos" && (isAdmin() || isVendor());
       allow write: if isAdmin();
     }
   }
