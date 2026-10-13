@@ -2455,8 +2455,8 @@ if ("serviceWorker" in navigator) {
   }
 
   // ---------- quién gana en cada dato (opción C) ----------
-  // Puntuación AnTuTu aproximada de cada procesador (se rellena con datos de Kimovil/nanoreview)
-  var ANTUTU = {};
+  // AnTuTu v11 (nanoreview.net, oct 2026). Clave = nombre simplificado del chip
+  var ANTUTU = {"dimensity7360turbo": 925000,"dimensity7360": 925000,"dimensity7400turbo": 953000,"dimensity7400": 953000,"exynos1330": 607000,"exynos1480": 1022000,"exynos1680": 1390000,"exynos2500": 2290000,"exynos2600": 3161000,"tensorg6": 1934000,"dimensity6400": 581000,"dimensity7100elite": 837000,"dimensity7300": 880000,"dimensity8500": 2120000,"dimensity9500": 3761000,"g81": 359000,"g81extreme": 359000,"g91": 354000,"g91ultra": 354000,"dimensity6300": 528000,"dimensity9600pro": 4838000,"dimensity9600m": 4012000,"g99": 555000,"snapdragon4gen2": 568000,"snapdragon4gen4": 594000,"snapdragon4gen5": 624000,"snapdragon6gen1": 737000,"snapdragon6gen3": 840000,"snapdragon6gen4": 975000,"snapdragon6gen5": 1012000,"snapdragon685": 476000,"snapdragon6s4ggen2": 506000,"snapdragon6sgen4": 830000,"snapdragon7gen4": 1330000,"snapdragon7sgen3": 1042000,"snapdragon8elite": 3126000,"snapdragon8elite5": 3950000,"snapdragon8elitegen5": 3950000,"snapdragon8eliteextremegen6": 5196000,"snapdragon8gen5": 3057000,"ums9230": 334000,"t606": 334000};
   function chipKey(s) {
     return String(s || "").toLowerCase().replace(/mediatek|qualcomm|samsung|google|unisoc|helio|mobile|\(.*?\)/g, "")
       .replace(/[^a-z0-9]/g, "");
@@ -2563,7 +2563,11 @@ if ("serviceWorker" in navigator) {
       }
       var win = specWinner(field, vC, vO);
       var wTd = win === "c" ? tdComp : (win === "o" ? tdOppo : null);
-      if (wTd) { wTd.classList.add("spec-win"); wTd.appendChild(el("span", "spec-check", "✓")); }
+      if (wTd) {
+        wTd.classList.add("spec-win");
+        var chk = el("span", "spec-check", "✓"), sm = wTd.querySelector(".spec-antutu");
+        if (sm) wTd.insertBefore(chk, sm); else wTd.appendChild(chk);
+      }
       tr.appendChild(tdLabel); tr.appendChild(tdComp); tr.appendChild(tdOppo);
       table.appendChild(tr);
     });
