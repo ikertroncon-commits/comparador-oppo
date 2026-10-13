@@ -371,14 +371,17 @@
     flex-shrink: 0;
   }
 
-  .spec-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13.5px; }
-  .spec-table tr { border-bottom: 1px solid var(--border); }
+  /* Tabla de especificaciones compacta: nombre del dato arriba y los dos valores lado a lado */
+  .spec-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; display: block; }
+  .spec-table tbody { display: block; }
+  .spec-table tr { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .spec-table tr:last-child { border-bottom: none; }
-  .spec-table td { padding: 11px 8px; vertical-align: top; }
-  .spec-table td.spec-label { width: 30%; color: var(--ink-faint); font-weight: 600; font-size: 12px; }
-  .spec-table td.spec-competitor { width: 35%; color: var(--slate); }
+  .spec-table td { display: block; padding: 0; vertical-align: top; line-height: 1.35; }
+  .spec-table td.spec-label { grid-column: 1 / -1; color: var(--ink-faint); font-weight: 700; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .spec-table td.spec-competitor { color: var(--slate); padding: 5px 8px; }
   .spec-table td.spec-oppo {
-    width: 35%; color: var(--green-deep); font-weight: 700; border-radius: 8px;
+    color: var(--green-deep); font-weight: 700; border-radius: 8px; padding: 5px 8px;
     background: var(--pitch-bg);
   }
 
@@ -2465,6 +2468,8 @@ if ("serviceWorker" in navigator) {
     table.innerHTML = "";
     SPEC_FIELDS.forEach(function (field) {
       var tr = document.createElement("tr");
+      var vC = (competitor.specs && competitor.specs[field]) || "", vO = (oppo.specs && oppo.specs[field]) || "";
+      if (/^[\s.\-–—]*$/.test(vC) && /^[\s.\-–—]*$/.test(vO)) return; // sin datos en ninguno: no se muestra
       var tdLabel = el("td", "spec-label", field);
       var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? competitor.specs[field] : "—");
       var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? oppo.specs[field] : "—");
