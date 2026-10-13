@@ -848,7 +848,11 @@ if ("serviceWorker" in navigator) {
   }
 
   // Identificador propio de este dispositivo (se guarda en el propio móvil)
+  // ¿Estamos dentro de la app nativa de Android?
+  function nativeApp() { return (window.AndroidApp && typeof window.AndroidApp.deviceId === "function") ? window.AndroidApp : null; }
   function deviceId() {
+    var na = nativeApp();
+    if (na) { try { var nid = na.deviceId(); if (nid) return "a_" + nid; } catch (e) {} }
     var k = "comparador-dispositivo", id = null;
     try { id = localStorage.getItem(k); } catch (e) {}
     if (!id) {
@@ -857,6 +861,23 @@ if ("serviceWorker" in navigator) {
     }
     return id;
   }
+  // Modelo del móvil (en Chrome se pide el modelo real; la app nativa lo da directamente)
+  function deviceLabelAsync() {
+    var na = nativeApp();
+    if (na && typeof na.model === "function") { try { return Promise.resolve(na.model() || deviceLabel()); } catch (e) {} }
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      return navigator.userAgentData.getHighEntropyValues(["model"])
+        .then(function (v) { return (v && v.model) ? v.model : deviceLabel(); })
+        .catch(function () { return deviceLabel(); });
+    }
+    return Promise.resolve(deviceLabel());
+  }
+  function sameModel(a, b) {
+    a = String(a || "").toLowerCase().trim(); b = String(b || "").toLowerCase().trim();
+    if (!a || !b) return false;
+    return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+  }
+  function genericLabel(l) { return !l || /^(k|otro dispositivo|android)$/i.test(String(l).trim()); }
   function deviceLabel() {
     var ua = navigator.userAgent || "";
     var m = ua.match(/Android [\d.]+; ([^;)]+)/);
@@ -910,12 +931,23 @@ if ("serviceWorker" in navigator) {
             var email = (user.email || "").toLowerCase();
             var myId = deviceId();
             var ref = db.collection("dispositivos").doc(email);
-            return ref.get().then(function (d) {
-              if (d && d.exists) return (d.data() && d.data().id === myId) ? "ok" : "otro-dispositivo";
-              return ref.set({ id: myId, email: email, desde: Date.now(), equipo: deviceLabel() })
+            return Promise.all([ref.get(), deviceLabelAsync()]).then(function (r) {
+              var d = r[0], label = r[1];
+              if (d && d.exists) {
+                var cur = d.data() || {};
+                if (cur.id === myId) return "ok";
+                // Paso de Chrome/APK web a la app nativa en el mismo móvil: se traslada el vínculo
+                if (nativeApp() && /^d/.test(cur.id || "") && (genericLabel(cur.equipo) || sameModel(cur.equipo, label))) {
+                  return ref.set({ id: myId, email: email, desde: cur.desde || Date.now(), equipo: label, migrado: Date.now() })
+                    .then(function () { return "ok"; })
+                    .catch(function () { return "otro-dispositivo"; });
+                }
+                return "otro-dispositivo";
+              }
+              return ref.set({ id: myId, email: email, desde: Date.now(), equipo: label })
                 .then(function () { return "ok"; })
                 .catch(function () { return "ok"; }); // reglas antiguas: no se puede registrar todavía
-            }).catch(function (e) { return (e && e.code === "permission-denied") ? "ok" : "ok"; });
+            }).catch(function (e) { return "ok"; });
           });
         });
         deviceCheck.then(function (res) {
@@ -1042,8 +1074,16 @@ if ("serviceWorker" in navigator) {
       out[cols[ci]] = {};
       snap.docs.forEach(function (d) { out[cols[ci]][d.id] = d.data(); total++; });
     }
-    var blob = new Blob([JSON.stringify(out)], { type: "application/json" });
     var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    var fname = "copia-comparador-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "_" + p(d.getHours()) + p(d.getMinutes()) + ".json";
+    var na = nativeApp();
+    if (na && typeof na.saveFile === "function") {
+      // En la app nativa se guarda en Descargas desde Android
+      var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(out))));
+      na.saveFile(fname, b64, "application/json");
+      return total;
+    }
+    var blob = new Blob([JSON.stringify(out)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "copia-comparador-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "_" + p(d.getHours()) + p(d.getMinutes()) + ".json";
@@ -1248,6 +1288,7 @@ if ("serviceWorker" in navigator) {
       state.brands = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       maybeSeed();
       renderBrandChips();
+      setTimeout(tryDeepLink, 0);
       renderAdminBrandList();
       renderAdminBrandSelect();
       renderAdminModelBrandBucket();
@@ -1261,6 +1302,8 @@ if ("serviceWorker" in navigator) {
   function subscribeModels() {
     state.unsub.models = state.db.collection("models").onSnapshot(function (snap) {
       state.models = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      try { if (window.AndroidApp && window.AndroidApp.setWidgetData) window.AndroidApp.setWidgetData(JSON.stringify({ modelos: state.models.length })); } catch (e) {}
+      setTimeout(tryDeepLink, 0);
       refreshCompetitorStep();
       refreshOppoStep();
       renderAdminModelList();
@@ -1306,6 +1349,37 @@ if ("serviceWorker" in navigator) {
     return state.models.filter(function (m) {
       return (m.eans || []).some(function (e) { return sameEan(e, code); });
     })[0];
+  }
+
+  // ---------- abrir una pantalla concreta (desde el widget o un enlace) ----------
+  var deepLinkDone = false;
+  function goTo(ir, marca) {
+    // cierra lo que haya abierto y vuelve al menú
+    if (state.quickCompareOpen) closeQuickCompare();
+    if (!$("view-scan").hidden) closeScan();
+    ["view-brand", "view-section", "view-concepts", "view-rivals", "view-admin"].forEach(function (v) { var e = $(v); if (e) e.hidden = true; });
+    $("view-compare").hidden = false;
+    var tabC = document.querySelector('.tab-btn[data-tab="compare"]'); var tabA = document.querySelector('.tab-btn[data-tab="admin"]');
+    if (tabC) tabC.classList.add("active"); if (tabA) tabA.classList.remove("active");
+    window.scrollTo({ top: 0 });
+    if (ir === "escanear") { openScan(); return; }
+    if (ir === "conceptos") { $("concepts-open-btn").click(); return; }
+    if (marca) {
+      var btns = document.querySelectorAll("#brand-chips .brand-btn");
+      for (var i = 0; i < btns.length; i++) {
+        if (btns[i].textContent.trim().toLowerCase() === String(marca).trim().toLowerCase()) { btns[i].click(); return; }
+      }
+    }
+  }
+  window.appIr = function (ir, marca) { goTo(ir, marca); };
+  function tryDeepLink() {
+    if (deepLinkDone || !state.brands.length || !state.models.length) return;
+    deepLinkDone = true;
+    var q = new URLSearchParams(location.search);
+    var ir = q.get("ir"), marca = q.get("marca");
+    if (!ir && !marca) return;
+    try { history.replaceState(history.state, "", location.pathname); } catch (e) {}
+    goTo(ir, marca);
   }
 
   function setupScanner() {
@@ -3215,7 +3289,9 @@ if ("serviceWorker" in navigator) {
     cur = cur === "light" ? "dark" : "light";
     apply(cur);
     try { localStorage.setItem("comparador-tema", cur); } catch (e) {}
+    try { if (window.AndroidApp && window.AndroidApp.setWidgetData) window.AndroidApp.setWidgetData(JSON.stringify({ tema: cur })); } catch (e) {}
   });
+  try { if (window.AndroidApp && window.AndroidApp.setWidgetData) window.AndroidApp.setWidgetData(JSON.stringify({ tema: cur })); } catch (e) {}
 })();
 </script>
 <script>
@@ -3248,6 +3324,8 @@ if ("serviceWorker" in navigator) {
     cur = d;
   }
   document.addEventListener("click", function () { setTimeout(sync, 0); }, true);
+  // App nativa: el botón atrás de Android pulsa el "Volver" visible (en el menú no hace nada)
+  window.appBack = function () { var b = backButton(); if (b) { b.click(); return "ok"; } return "menu"; };
   window.addEventListener("popstate", function () {
     if (ignore > 0) { ignore--; return; }
     if (cur > 0) {
