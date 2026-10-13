@@ -574,6 +574,8 @@
   .concept-item[open] { border-color: var(--glow-strong); }
   .concept-body { padding: 0 16px 14px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); white-space: pre-wrap; }
   .concept-body a { color: var(--link); font-weight: 600; word-break: break-all; }
+  .concept-body .concept-key { color: var(--green-deep); font-weight: 800; }
+  .concept-body .concept-head { color: var(--ink); font-weight: 800; }
   .concept-admin { display: flex; gap: 14px; padding: 0 16px 12px; }
   .concept-form {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
@@ -2034,6 +2036,28 @@ if ("serviceWorker" in navigator) {
   // Texto del concepto con las direcciones web convertidas en enlaces que se pueden tocar
   function linkifiedBody(text) {
     var div = el("div", "concept-body");
+    // Resalta la palabra clave de cada punto («• IP55: …» → «IP55») y los títulos que acaban en «:»
+    String(text).split("\n").forEach(function (line, i) {
+      if (i > 0) div.appendChild(document.createTextNode("\n"));
+      var m = /^(\s*(?:[•·\-–—*]\s*)?)([^:：\n]{1,64}?)([:：])(.*)$/.exec(line);
+      var isUrl = /^\s*(https?:|www\.)/i.test(line);
+      if (m && !isUrl && !(m[3] === ":" && m[4] && !/^\s/.test(m[4]))) {
+        var bullet = /[•·\-–—*]/.test(m[1]);
+        var rest = m[4];
+        // título suelto («A tener en cuenta:»), clave de un punto («• IP55:») o de un párrafo
+        // que no sea el primero («Argumento de venta: …»)
+        if (!rest.trim() || (bullet && m[2].length <= 60) || (i > 0 && m[2].length <= 32 && !/[,，。;；]/.test(m[2]))) {
+          if (m[1]) div.appendChild(document.createTextNode(m[1]));
+          div.appendChild(el("strong", rest.trim() ? "concept-key" : "concept-head", m[2] + m[3]));
+          appendLinked(div, rest);
+          return;
+        }
+      }
+      appendLinked(div, line);
+    });
+    return div;
+  }
+  function appendLinked(div, text) {
     var re = /(https?:\/\/[^\s]+|www\.[^\s]+)/g, last = 0, m;
     while ((m = re.exec(text))) {
       var url = m[0].replace(/[.,;:)»]+$/, "");
@@ -2047,7 +2071,6 @@ if ("serviceWorker" in navigator) {
       re.lastIndex = last;
     }
     if (last < text.length) div.appendChild(document.createTextNode(text.slice(last)));
-    return div;
   }
   function subscribeConcepts() {
     state.db.collection("concepts").onSnapshot(function (snap) {
