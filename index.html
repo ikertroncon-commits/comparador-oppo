@@ -2483,8 +2483,7 @@ if ("serviceWorker" in navigator) {
       case "Carga rápida":
         return cmp(maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, c)), maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, o)));
       case "Cámara principal": case "Cámara frontal":
-        var fc = nums(/(\d+(?:\.\d+)?)\s*(mpx|mp)/g, c)[0], fo = nums(/(\d+(?:\.\d+)?)\s*(mpx|mp)/g, o)[0];
-        return cmp(fc == null ? null : fc, fo == null ? null : fo);
+        return null; // más megapíxeles no significa mejores fotos: lo argumenta el vendedor
       case "Resistencia (IP)":
         var ip = function (s) {
           s = String(s || "").toLowerCase(); var i = s.indexOf("ip"); if (i < 0) return null;
