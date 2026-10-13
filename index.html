@@ -604,7 +604,7 @@ if ("serviceWorker" in navigator) {
 
   <section class="admin-section">
     <h2>Exportar copia de seguridad</h2>
-    <p class="hint">Descarga un archivo con todos los datos (marcas, modelos, comparativas, intereses, relojes y auriculares, conceptos y fotos subidas). Guárdalo en Drive o en tu correo. Hazlo antes de cualquier cambio grande.</p>
+    <p class="hint">Descarga un archivo con todos los datos (marcas, modelos, comparativas, intereses, relojes y auriculares, conceptos, fotos subidas y vendedores autorizados). Guárdalo en Drive o en tu correo. Hazlo antes de cualquier cambio grande.</p>
     <button type="button" class="primary-btn" id="fb-export-btn">Descargar copia</button>
     <p id="fb-export-status" class="fb-import-status"></p>
   </section>
@@ -848,7 +848,7 @@ if ("serviceWorker" in navigator) {
   // ---- exportar copia de seguridad ----
   window.fbExport = async function () {
     var fb = await init();
-    var cols = ["brands", "models", "comparisons", "interests", "accessories", "concepts", "assets"];
+    var cols = ["brands", "models", "comparisons", "interests", "accessories", "concepts", "assets", "vendedores", "ajustes"];
     var out = {}, total = 0;
     for (var ci = 0; ci < cols.length; ci++) {
       var snap = await fb.db.collection(cols[ci]).get();
