@@ -931,14 +931,19 @@ if ("serviceWorker" in navigator) {
   // ---- importar copia de seguridad (datos-completos.json) ----
   window.fbImport = async function (json, onProgress) {
     var fb = await init();
-    var cols = Object.keys(json);
+    // "_fusionar": true → solo añade/cambia los campos que trae el archivo, sin borrar el resto del registro
+    var merge = json._fusionar === true;
+    var cols = Object.keys(json).filter(function (k) { return k.charAt(0) !== "_"; });
     var total = 0;
     for (var ci = 0; ci < cols.length; ci++) {
       var col = cols[ci], docs = json[col], ids = Object.keys(docs);
       var step = col === "assets" ? 5 : 400;
       for (var i = 0; i < ids.length; i += step) {
         var batch = fb.db.batch();
-        ids.slice(i, i + step).forEach(function (id) { batch.set(fb.db.collection(col).doc(id), docs[id]); });
+        ids.slice(i, i + step).forEach(function (id) {
+          if (merge) batch.set(fb.db.collection(col).doc(id), docs[id], { merge: true });
+          else batch.set(fb.db.collection(col).doc(id), docs[id]);
+        });
         await batch.commit();
         total += Math.min(step, ids.length - i);
         if (onProgress) onProgress(total);
