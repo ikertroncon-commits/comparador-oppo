@@ -176,6 +176,22 @@
   .concepts-tile .text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
   .concepts-tile .sub { font-size: 12px; font-weight: 600; color: var(--ink-faint); }
   .concepts-tile .chev { margin-left: auto; color: var(--ink-faint); font-size: 18px; }
+  #step-scan { margin-bottom: 22px; }
+  .scan-tile { border-color: transparent; background: var(--gradient); }
+  .scan-tile .label, .scan-tile .sub, .scan-tile .chev { color: #fff !important; }
+  .scan-tile .sub { opacity: .9; text-align: left; }
+  .scan-box { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #000; border-radius: 16px; overflow: hidden; }
+  .scan-box video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scan-frame { position: absolute; left: 10%; right: 10%; top: 32%; bottom: 32%; border: 3px solid rgba(255,255,255,.9); border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,.35); pointer-events: none; }
+  .scan-status { margin-top: 12px; text-align: center; }
+  .scan-result { margin: 14px 0; padding: 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+  .scan-result p { margin: 0 0 10px; }
+  .scan-result select { width: 100%; margin-bottom: 10px; }
+  .scan-result .row-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .scan-manual { margin-top: 18px; }
+  textarea.ean-input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 14px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; resize: vertical; letter-spacing: .03em; }
+  .scan-manual-row { display: flex; gap: 8px; }
+  .scan-manual-row input { flex: 1; min-width: 0; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; letter-spacing: .04em; }
   .concept-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
   .category-tile .count { font-size: 12px; font-weight: 600; color: var(--ink-faint); margin-top: -4px; }
   .concept-section-title {
@@ -440,6 +456,14 @@ if ("serviceWorker" in navigator) {
 
 <main id="view-compare" class="view">
 
+  <div id="step-scan">
+    <button id="scan-open-btn" class="category-tile concepts-tile scan-tile" type="button">
+      <span class="icon">📷</span>
+      <span class="text"><span class="label">Escanear código</span><span class="sub">Escanea el código de barras de la caja y te llevo al modelo</span></span>
+      <span class="chev">›</span>
+    </button>
+  </div>
+
   <div id="step-brand">
     <p class="step-label">Paso 1 · Marca competidora</p>
     <div id="brand-chips" class="brand-grid"></div>
@@ -574,6 +598,24 @@ if ("serviceWorker" in navigator) {
   <p class="step-label">Alternativas OPPO para <span id="quick-competitor-name" class="accent"></span></p>
   <div id="quick-oppo-grid" class="model-grid"></div>
   <div id="quick-compare-anchor"></div>
+</main>
+
+<main id="view-scan" class="view" hidden>
+  <button id="scan-back-btn" class="link-btn back-btn" type="button">← Volver al menú</button>
+  <p class="step-label">📷 Escanear código de barras</p>
+  <div class="scan-box">
+    <video id="scan-video" playsinline muted></video>
+    <div class="scan-frame"></div>
+  </div>
+  <p id="scan-status" class="hint scan-status">Apunta al código de barras de la caja del móvil.</p>
+  <div id="scan-result" class="scan-result" hidden></div>
+  <form id="scan-manual" class="scan-manual" autocomplete="off">
+    <p class="hint">¿No lo lee? Escribe los números del código:</p>
+    <div class="scan-manual-row">
+      <input id="scan-manual-input" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 8436...">
+      <button type="submit" class="primary-btn">Buscar</button>
+    </div>
+  </form>
 </main>
 
 <main id="view-admin" class="view" hidden>
@@ -1023,6 +1065,7 @@ if ("serviceWorker" in navigator) {
     setupAccessoryAdminForms();
     setupPitchEditor();
     setupInterestPitchEditor();
+    setupScanner();
     $("reset-btn").addEventListener("click", resetSelection);
     $("quick-back-btn").addEventListener("click", closeQuickCompare);
     $("brand-back-btn").addEventListener("click", resetSelection);
@@ -1098,6 +1141,207 @@ if ("serviceWorker" in navigator) {
     }, function (err) {
       console.error("accessories error", err);
     });
+  }
+
+  // ---------- escanear código de barras (EAN) ----------
+  var scan = { stream: null, timer: null, detector: null, zxing: null, busy: false };
+
+  function normEan(code) { return String(code || "").replace(/\D/g, ""); }
+  function sameEan(a, b) {
+    a = normEan(a).replace(/^0+/, ""); b = normEan(b).replace(/^0+/, "");
+    return !!a && a === b;
+  }
+  function findModelByEan(code) {
+    return state.models.filter(function (m) {
+      return (m.eans || []).some(function (e) { return sameEan(e, code); });
+    })[0];
+  }
+
+  function setupScanner() {
+    $("scan-open-btn").addEventListener("click", openScan);
+    $("scan-back-btn").addEventListener("click", function () { closeScan(); $("view-compare").hidden = false; window.scrollTo({ top: 0 }); });
+    $("scan-manual").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var code = normEan($("scan-manual-input").value);
+      if (code.length < 6) { $("scan-status").textContent = "Escribe el código completo (normalmente 13 números)."; return; }
+      handleCode(code);
+    });
+  }
+
+  function openScan() {
+    $("view-compare").hidden = true;
+    $("view-scan").hidden = false;
+    $("scan-result").hidden = true;
+    $("scan-manual-input").value = "";
+    window.scrollTo({ top: 0 });
+    startCamera();
+  }
+
+  function closeScan() {
+    stopCamera();
+    $("view-scan").hidden = true;
+  }
+
+  async function startCamera() {
+    var status = $("scan-status");
+    stopCamera();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = "Este navegador no permite usar la cámara. Escribe el código abajo.";
+      return;
+    }
+    status.textContent = "Abriendo la cámara…";
+    try {
+      scan.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    } catch (e) {
+      console.warn("camara", e);
+      status.textContent = "No se pudo abrir la cámara. Revisa que la app tenga permiso de cámara o escribe el código abajo.";
+      return;
+    }
+    if ($("view-scan").hidden) { stopCamera(); return; }
+    var video = $("scan-video");
+    video.srcObject = scan.stream;
+    try { await video.play(); } catch (e) {}
+    status.textContent = "Apunta al código de barras de la caja del móvil.";
+
+    if ("BarcodeDetector" in window) {
+      try {
+        if (!scan.detector) scan.detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+        scan.timer = setInterval(async function () {
+          if (scan.busy || !scan.stream || video.readyState < 2) return;
+          scan.busy = true;
+          try {
+            var codes = await scan.detector.detect(video);
+            if (codes && codes.length) { handleCode(codes[0].rawValue); }
+          } catch (e) {}
+          scan.busy = false;
+        }, 250);
+        return;
+      } catch (e) { console.warn("BarcodeDetector", e); }
+    }
+    // Alternativa si el navegador no trae lector de códigos
+    try {
+      if (!window.ZXing) await loadScript("https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js");
+      var hints = new Map();
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]);
+      scan.zxing = new ZXing.BrowserMultiFormatReader(hints);
+      scan.zxing.decodeFromStream(scan.stream, video, function (result) {
+        if (result && scan.stream) handleCode(result.getText());
+      });
+    } catch (e) {
+      console.warn("zxing", e);
+      stopCamera();
+      status.textContent = "Este móvil no puede leer códigos con la cámara. Escribe el código abajo.";
+    }
+  }
+
+  function stopCamera() {
+    if (scan.timer) { clearInterval(scan.timer); scan.timer = null; }
+    if (scan.zxing) { try { scan.zxing.reset(); } catch (e) {} scan.zxing = null; }
+    if (scan.stream) { scan.stream.getTracks().forEach(function (t) { t.stop(); }); scan.stream = null; }
+    var v = $("scan-video"); if (v) v.srcObject = null;
+    scan.busy = false;
+  }
+
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+
+  function handleCode(raw) {
+    var code = normEan(raw);
+    if (!code) return;
+    stopCamera();
+    if (navigator.vibrate) { try { navigator.vibrate(80); } catch (e) {} }
+    var m = findModelByEan(code);
+    var res = $("scan-result");
+    res.innerHTML = "";
+    res.hidden = false;
+    $("scan-status").textContent = "Código leído: " + code;
+
+    if (m) {
+      var brand = findBrand(m.brandId);
+      if (brand && !brand.isOppo) { openCompetitorFromScan(m); return; }
+      var full = (brand && m.name.toLowerCase().indexOf(brand.name.toLowerCase()) !== 0) ? brand.name + " " + m.name : m.name;
+      res.appendChild(el("p", null, "✅ Es un " + full + "."));
+      res.appendChild(el("p", "hint", "Es un modelo de OPPO, así que no hay comparativa directa."));
+      appendScanAgain(res);
+      return;
+    }
+
+    res.appendChild(el("p", null, "❓ No tenemos ningún modelo con el código " + code + "."));
+    if (state.canEdit) {
+      res.appendChild(el("p", "hint", "Como administrador, puedes asignar este código a un modelo:"));
+      var sel = document.createElement("select");
+      var none = document.createElement("option"); none.value = ""; none.textContent = "— Elige el modelo —"; sel.appendChild(none);
+      state.models.slice().sort(function (a, b) {
+        var ba = (findBrand(a.brandId) || {}).name || "", bb = (findBrand(b.brandId) || {}).name || "";
+        return (ba + a.name).localeCompare(bb + b.name);
+      }).forEach(function (mm) {
+        var o = document.createElement("option"); o.value = mm.id;
+        o.textContent = ((findBrand(mm.brandId) || {}).name || "") + " · " + mm.name;
+        sel.appendChild(o);
+      });
+      res.appendChild(sel);
+      var actions = el("div", "row-actions");
+      var assign = el("button", "primary-btn", "Asignar código");
+      assign.type = "button";
+      assign.addEventListener("click", async function () {
+        var target = findModel(sel.value);
+        if (!target) { showToast("Elige un modelo"); return; }
+        var list = (target.eans || []).slice();
+        if (!list.some(function (e) { return sameEan(e, code); })) list.push(code);
+        try {
+          await state.db.collection("models").doc(target.id).update({ eans: list });
+          showToast("Código asignado a " + target.name);
+          res.innerHTML = "";
+          res.appendChild(el("p", null, "✅ Código " + code + " asignado a " + target.name + "."));
+          appendScanAgain(res);
+        } catch (e) { console.error(e); showToast("No se pudo guardar"); }
+      });
+      actions.appendChild(assign);
+      res.appendChild(actions);
+    } else {
+      res.appendChild(el("p", "hint", "Avisa a tu responsable para que lo añada."));
+    }
+    appendScanAgain(res);
+  }
+
+  function appendScanAgain(res) {
+    var again = el("button", "secondary-btn", "Escanear otro");
+    again.type = "button";
+    again.style.marginTop = "10px";
+    again.addEventListener("click", function () { res.hidden = true; $("scan-manual-input").value = ""; startCamera(); });
+    res.appendChild(again);
+  }
+
+  function openCompetitorFromScan(m) {
+    closeScan();
+    state.selectedBrandId = m.brandId;
+    state.selectedCompetitorRange = m.range || null;
+    state.competitorSearch = "";
+    var cs = $("competitor-search-input"); if (cs) cs.value = "";
+    state.selectedCompetitorModelId = null;
+    state.selectedOppoRange = null;
+    state.selectedOppoModelId = null;
+    state.oppoSearch = "";
+    var os = $("oppo-search-input"); if (os) os.value = "";
+    renderBrandChips();
+    $("view-compare").hidden = true;
+    $("view-brand").hidden = false;
+    var recommendedIds = (m.recommendedOppoIds || []).filter(function (id) { return findModel(id); });
+    if (recommendedIds.length > 0) {
+      state.selectedCompetitorModelId = m.id;
+      refreshCompetitorStep();
+      openQuickCompare(m, recommendedIds);
+      return;
+    }
+    state.selectedCompetitorModelId = m.id;
+    refreshCompetitorStep();
+    $("step-oppo-model").hidden = false;
+    refreshOppoStep();
+    $("comparison-result").hidden = true;
+    window.scrollTo({ top: 0 });
   }
 
   // ---------- conceptos telefonía ----------
@@ -1325,6 +1569,7 @@ if ("serviceWorker" in navigator) {
         btn.classList.add("active");
         var tab = btn.getAttribute("data-tab");
         if (state.quickCompareOpen) closeQuickCompare();
+        if (!$("view-scan").hidden) closeScan();
         $("view-brand").hidden = true;
         if (!$("view-section").hidden) closeSectionPage();
         if (!$("view-concepts").hidden) closeConceptsPage();
@@ -2273,6 +2518,18 @@ if ("serviceWorker" in navigator) {
       }
     });
 
+    var eanField = el("div", "field-row");
+    eanField.appendChild(el("label", null, "Códigos de barras (EAN) — uno por línea, uno por cada versión o color"));
+    var eanInput = document.createElement("textarea");
+    eanInput.rows = 2;
+    eanInput.className = "ean-input";
+    eanInput.setAttribute("inputmode", "numeric");
+    eanInput.placeholder = "Ej. 8436...";
+    eanInput.value = ((model && model.eans) || []).join("\n");
+    eanInput.addEventListener("click", function (ev) { ev.stopPropagation(); });
+    eanField.appendChild(eanInput);
+    body.appendChild(eanField);
+
     var specGrid = el("div", "spec-grid");
     var specInputs = {};
     SPEC_FIELDS.forEach(function (field) {
@@ -2357,6 +2614,8 @@ if ("serviceWorker" in navigator) {
         if (v) specs[field] = v;
       });
       var payload = { name: name, brandId: brandId, specs: specs, imageId: pendingImageId || null };
+      payload.eans = eanInput.value.split(/[\s,;]+/).map(normEan).filter(function (x) { return x.length >= 6; })
+        .filter(function (x, i, arr) { return arr.indexOf(x) === i; });
       if (rangeInput) payload.range = rangeInput.value;
       if (recSelect1 || recSelect2) {
         var recIds = [];
@@ -2700,11 +2959,11 @@ if ("serviceWorker" in navigator) {
   function depth() {
     if (shown("view-quick-compare")) return 2;
     if (shown("view-concepts")) return /categor/i.test(el("concepts-back-btn").textContent) ? 2 : 1;
-    if (shown("view-brand") || shown("view-section") || shown("view-admin")) return 1;
+    if (shown("view-brand") || shown("view-section") || shown("view-admin") || shown("view-scan")) return 1;
     return 0;
   }
   function backButton() {
-    var ids = ["quick-back-btn", "concepts-back-btn", "section-back-btn", "brand-back-btn"];
+    var ids = ["quick-back-btn", "concepts-back-btn", "section-back-btn", "brand-back-btn", "scan-back-btn"];
     for (var i = 0; i < ids.length; i++) { var b = el(ids[i]); if (b && b.offsetParent !== null) return b; }
     if (shown("view-admin")) return document.querySelector('.tab-btn[data-tab="compare"]');
     return null;
