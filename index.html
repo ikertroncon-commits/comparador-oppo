@@ -377,13 +377,20 @@
   .spec-table tr { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .spec-table tr:last-child { border-bottom: none; }
   .spec-table td { display: block; padding: 0; vertical-align: top; line-height: 1.35; }
-  .spec-table td.spec-label { grid-column: 1 / -1; color: var(--ink-faint); font-weight: 700; font-size: 10.5px;
-    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
-  .spec-table td.spec-competitor { color: var(--slate); padding: 5px 8px; }
+  .spec-table td.spec-label { grid-column: 1 / -1; color: var(--ink); font-weight: 800; font-size: 12.5px;
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+  .spec-table .spec-ic { display: inline-flex; width: 18px; height: 18px; color: var(--green-deep); flex-shrink: 0; }
+  .spec-table .spec-ic svg { width: 18px; height: 18px; }
+  .spec-table td.spec-competitor { color: var(--ink-soft); font-size: 13.5px; padding: 4px 8px; }
   .spec-table td.spec-oppo {
-    color: var(--green-deep); font-weight: 700; border-radius: 8px; padding: 5px 8px;
-    background: var(--pitch-bg);
+    color: var(--ink); font-weight: 600; font-size: 13.5px; border-radius: 6px; padding: 4px 8px;
+    background: var(--green-tint); border-left: 3px solid var(--green);
   }
+  .spec-table tr.spec-head { padding: 0 0 6px; }
+  .spec-table tr.spec-head td { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 0 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .spec-table td.spec-h-comp { color: var(--ink-faint); }
+  .spec-table td.spec-h-oppo { color: var(--green-deep); padding-left: 11px; }
 
   .pitch-card {
     margin-top: 20px; background: var(--surface); border: 1px solid var(--border);
@@ -2473,11 +2480,21 @@ if ("serviceWorker" in navigator) {
 
     var table = $("spec-table");
     table.innerHTML = "";
+    var head = document.createElement("tr"); head.className = "spec-head";
+    head.appendChild(el("td", "spec-h-comp", competitor.name));
+    head.appendChild(el("td", "spec-h-oppo", oppo.name));
+    table.appendChild(head);
     SPEC_FIELDS.forEach(function (field) {
       var tr = document.createElement("tr");
       var vC = (competitor.specs && competitor.specs[field]) || "", vO = (oppo.specs && oppo.specs[field]) || "";
       if (/^[\s.\-–—]*$/.test(vC) && /^[\s.\-–—]*$/.test(vO)) return; // sin datos en ninguno: no se muestra
-      var tdLabel = el("td", "spec-label", field);
+      var tdLabel = el("td", "spec-label");
+      var ICON_BY_FIELD = { "Pantalla": "pantalla", "Procesador": "procesador", "RAM": "memoria", "Almacenamiento": "memoria",
+        "Batería": "bateria", "Carga rápida": "carga", "Cámara principal": "camara", "Cámara frontal": "camara",
+        "Resistencia (IP)": "resistencia", "Precio": "precio" };
+      var kind = ICON_BY_FIELD[field];
+      if (kind && PITCH_ICONS[kind]) { var ic = document.createElement("span"); ic.className = "spec-ic"; ic.innerHTML = PITCH_ICONS[kind]; tdLabel.appendChild(ic); }
+      tdLabel.appendChild(document.createTextNode(field));
       var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? competitor.specs[field] : "—");
       var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? oppo.specs[field] : "—");
       tr.appendChild(tdLabel); tr.appendChild(tdComp); tr.appendChild(tdOppo);
