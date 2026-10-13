@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Comparador OPPO</string>
+    <string name="widget_grande_nombre">Comparador (grande)</string>
+    <string name="widget_pequeno_nombre">Escanear código</string>
+    <string name="widget_grande_desc">Escanear, comparar e ir directo a cada marca</string>
+    <string name="widget_pequeno_desc">Abre el escáner de códigos con un toque</string>
+</resources>

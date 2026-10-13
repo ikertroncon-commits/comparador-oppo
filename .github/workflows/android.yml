@@ -1,0 +1,59 @@
+name: App Android
+
+# Genera la APK de la app nativa cada vez que cambia la carpeta android/
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Llave de firma
+        env:
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEY_PASSWORD" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in android/signing.keystore.enc \
+              -out "$RUNNER_TEMP/release.keystore" -pass env:KEY_PASSWORD
+            echo "KS_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            echo "KS_PASS=$KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "FIRMA=oficial" >> "$GITHUB_ENV"
+          else
+            echo "FIRMA=prueba" >> "$GITHUB_ENV"
+          fi
+          echo "VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
+      - name: Compilar APK
+        working-directory: android
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Publicar APK en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Comparador-OPPO.apk
+          TAG="app-v${VERSION_CODE}"
+          if [ "$FIRMA" = "oficial" ]; then
+            gh release create "$TAG" Comparador-OPPO.apk --title "App Comparador OPPO v${VERSION_CODE}" \
+              --notes "APK firmada. Se instala encima de la versión anterior."
+          else
+            gh release create "$TAG" Comparador-OPPO.apk --prerelease --title "Prueba v${VERSION_CODE} (sin firma oficial)" \
+              --notes "Compilación de prueba: falta el secreto ANDROID_KEY_PASSWORD. No repartir."
+          fi

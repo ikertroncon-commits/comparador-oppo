@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+// La versión y la firma las pone GitHub al compilar (ver .github/workflows/android.yml)
+def vCode = (System.getenv('VERSION_CODE') ?: '100') as int
+def ksPath = System.getenv('KS_PATH')
+
+android {
+    namespace 'es.comparadorventas.app'
+    compileSdk 34
+
+    defaultConfig {
+        // Mismo nombre de paquete que la APK anterior: se instala encima como actualización
+        applicationId 'es.comparadorventas.app'
+        minSdk 24
+        targetSdk 34
+        versionCode vCode
+        versionName "2.0." + vCode
+    }
+
+    signingConfigs {
+        release {
+            if (ksPath) {
+                storeFile file(ksPath)
+                storePassword System.getenv('KS_PASS')
+                keyAlias System.getenv('KS_ALIAS') ?: 'my-key-alias'
+                keyPassword System.getenv('KS_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig ksPath ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
