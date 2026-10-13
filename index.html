@@ -189,6 +189,15 @@
   .scan-result select { width: 100%; margin-bottom: 10px; }
   .scan-result .row-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .scan-manual { margin-top: 18px; }
+  .rivals-oppo { display: flex; gap: 16px; align-items: center; background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px; padding: 16px; margin-bottom: 24px; }
+  .rivals-oppo img { width: 96px; height: 120px; object-fit: contain; flex-shrink: 0; }
+  .rivals-oppo .ro-text { min-width: 0; }
+  .rivals-oppo .ro-kicker { font-size: 12px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 2px; }
+  .rivals-oppo .ro-name { font-size: 20px; font-weight: 800; margin: 0 0 8px; background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .rivals-oppo .ro-specs { margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .rivals-oppo .ro-specs b { color: var(--ink); font-weight: 700; }
+  .rivals-hint { margin-top: -6px; }
+  .rivals-brand { font-size: 13px; font-weight: 800; color: var(--ink); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; }
   textarea.ean-input { width: 100%; box-sizing: border-box; font-family: var(--font); font-size: 14px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; resize: vertical; letter-spacing: .03em; }
   .scan-manual-row { display: flex; gap: 8px; }
   .scan-manual-row input { flex: 1; min-width: 0; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; letter-spacing: .04em; }
@@ -616,6 +625,14 @@ if ("serviceWorker" in navigator) {
       <button type="submit" class="primary-btn">Buscar</button>
     </div>
   </form>
+</main>
+
+<main id="view-rivals" class="view" hidden>
+  <button id="rivals-back-btn" class="link-btn back-btn" type="button">← Volver al menú</button>
+  <div id="rivals-oppo" class="rivals-oppo"></div>
+  <p class="step-label">⚔️ Su competencia</p>
+  <p class="hint rivals-hint">Toca un modelo para ver la comparativa con este OPPO.</p>
+  <div id="rivals-list"></div>
 </main>
 
 <main id="view-admin" class="view" hidden>
@@ -1066,6 +1083,7 @@ if ("serviceWorker" in navigator) {
     setupPitchEditor();
     setupInterestPitchEditor();
     setupScanner();
+    $("rivals-back-btn").addEventListener("click", function () { $("view-rivals").hidden = true; $("view-compare").hidden = false; window.scrollTo({ top: 0 }); });
     $("reset-btn").addEventListener("click", resetSelection);
     $("quick-back-btn").addEventListener("click", closeQuickCompare);
     $("brand-back-btn").addEventListener("click", resetSelection);
@@ -1262,10 +1280,7 @@ if ("serviceWorker" in navigator) {
     if (m) {
       var brand = findBrand(m.brandId);
       if (brand && !brand.isOppo) { openCompetitorFromScan(m); return; }
-      var full = (brand && m.name.toLowerCase().indexOf(brand.name.toLowerCase()) !== 0) ? brand.name + " " + m.name : m.name;
-      res.appendChild(el("p", null, "✅ Es un " + full + "."));
-      res.appendChild(el("p", "hint", "Es un modelo de OPPO, así que no hay comparativa directa."));
-      appendScanAgain(res);
+      openOppoRivals(m);
       return;
     }
 
@@ -1305,6 +1320,78 @@ if ("serviceWorker" in navigator) {
       res.appendChild(el("p", "hint", "Avisa a tu responsable para que lo añada."));
     }
     appendScanAgain(res);
+  }
+
+  // ---------- página de un OPPO con su competencia ----------
+  function openOppoRivals(oppo) {
+    closeScan();
+    $("view-compare").hidden = true;
+    $("view-brand").hidden = true;
+    $("view-rivals").hidden = false;
+    renderOppoRivals(oppo);
+    window.scrollTo({ top: 0 });
+  }
+
+  function renderOppoRivals(oppo) {
+    var head = $("rivals-oppo"); head.innerHTML = "";
+    if (oppo.imageId) {
+      var img = document.createElement("img"); img.src = blobSrc(oppo.imageId); img.alt = oppo.name; head.appendChild(img);
+    }
+    var t = el("div", "ro-text");
+    t.appendChild(el("p", "ro-kicker", "OPPO" + (oppo.range ? " · " + oppo.range : "")));
+    t.appendChild(el("p", "ro-name", oppo.name));
+    var ul = el("ul", "ro-specs");
+    ["Pantalla", "Procesador", "Batería", "Cámara principal", "Precio"].forEach(function (f) {
+      var v = oppo.specs && oppo.specs[f];
+      if (!v || /^[\s.\-–]*$/.test(v)) return;
+      var li = document.createElement("li");
+      li.appendChild(el("b", null, f + ": "));
+      li.appendChild(document.createTextNode(v));
+      ul.appendChild(li);
+    });
+    t.appendChild(ul);
+    head.appendChild(t);
+
+    var list = $("rivals-list"); list.innerHTML = "";
+    var rivals = state.models.filter(function (m) {
+      var b = findBrand(m.brandId);
+      return b && !b.isOppo && (m.recommendedOppoIds || []).indexOf(oppo.id) !== -1;
+    });
+    if (!rivals.length) {
+      list.appendChild(el("p", "hint", "Todavía no hay modelos de la competencia asociados a este OPPO. Se asocian en Administrar, editando el modelo de la competencia, en «Alternativas OPPO recomendadas»."));
+      return;
+    }
+    competitorBrands().forEach(function (b) {
+      var ms = rivals.filter(function (m) { return m.brandId === b.id; })
+        .sort(function (x, y) { return (x.order || 0) - (y.order || 0); });
+      if (!ms.length) return;
+      list.appendChild(el("p", "rivals-brand", b.name));
+      var grid = el("div", "model-grid");
+      ms.forEach(function (m) {
+        var card = buildModelCard(m, false, false);
+        var sub = card.querySelector(".m-sub"); if (sub) sub.textContent = m.range || "";
+        card.addEventListener("click", function () { openRivalComparison(m, oppo); });
+        grid.appendChild(card);
+      });
+      list.appendChild(grid);
+    });
+  }
+
+  function openRivalComparison(m, oppo) {
+    $("view-rivals").hidden = true;
+    state.selectedBrandId = m.brandId;
+    state.selectedCompetitorRange = m.range || null;
+    state.competitorSearch = "";
+    state.selectedCompetitorModelId = m.id;
+    state.selectedOppoRange = null;
+    state.oppoSearch = "";
+    renderBrandChips();
+    refreshCompetitorStep();
+    var recommendedIds = (m.recommendedOppoIds || []).filter(function (id) { return findModel(id); });
+    state.selectedOppoModelId = oppo.id;
+    state.returnRivals = oppo;
+    openQuickCompare(m, recommendedIds);
+    showComparison();
   }
 
   function appendScanAgain(res) {
@@ -1570,6 +1657,7 @@ if ("serviceWorker" in navigator) {
         var tab = btn.getAttribute("data-tab");
         if (state.quickCompareOpen) closeQuickCompare();
         if (!$("view-scan").hidden) closeScan();
+        $("view-rivals").hidden = true;
         $("view-brand").hidden = true;
         if (!$("view-section").hidden) closeSectionPage();
         if (!$("view-concepts").hidden) closeConceptsPage();
@@ -2276,6 +2364,13 @@ if ("serviceWorker" in navigator) {
     state.selectedCompetitorModelId = null;
     refreshCompetitorStep();
     $("view-brand").hidden = false;
+    if (state.returnRivals) {
+      // Se llegó desde la página de un OPPO: se vuelve a ella
+      var backTo = state.returnRivals; state.returnRivals = null;
+      $("view-brand").hidden = true;
+      $("view-rivals").hidden = false;
+      renderOppoRivals(backTo);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -2959,11 +3054,11 @@ if ("serviceWorker" in navigator) {
   function depth() {
     if (shown("view-quick-compare")) return 2;
     if (shown("view-concepts")) return /categor/i.test(el("concepts-back-btn").textContent) ? 2 : 1;
-    if (shown("view-brand") || shown("view-section") || shown("view-admin") || shown("view-scan")) return 1;
+    if (shown("view-brand") || shown("view-section") || shown("view-admin") || shown("view-scan") || shown("view-rivals")) return 1;
     return 0;
   }
   function backButton() {
-    var ids = ["quick-back-btn", "concepts-back-btn", "section-back-btn", "brand-back-btn", "scan-back-btn"];
+    var ids = ["quick-back-btn", "concepts-back-btn", "section-back-btn", "brand-back-btn", "scan-back-btn", "rivals-back-btn"];
     for (var i = 0; i < ids.length; i++) { var b = el(ids[i]); if (b && b.offsetParent !== null) return b; }
     if (shown("view-admin")) return document.querySelector('.tab-btn[data-tab="compare"]');
     return null;
