@@ -48,6 +48,8 @@
     --blob-3: rgba(242, 87, 123, 0.14);
     --pitch-bg: linear-gradient(120deg, rgba(255, 157, 108, 0.12), rgba(242, 87, 123, 0.18));
     --link: #ff8fb1;
+    --win: #34C77B;
+    --win-bg: rgba(52, 199, 123, 0.14);
     --radius-card: 20px;
     --radius-chip: 999px;
     --font: 'Manrope', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -82,6 +84,8 @@
     --blob-3: rgba(52, 199, 123, 0.08);
     --pitch-bg: linear-gradient(120deg, rgba(52, 199, 123, 0.10), rgba(18, 161, 92, 0.14));
     --link: #0B8A4E;
+    --win: #0E9F5A;
+    --win-bg: rgba(18, 161, 92, 0.12);
     color-scheme: light;
   }
   .theme-btn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex-shrink: 0;
@@ -381,16 +385,15 @@
     text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
   .spec-table .spec-ic { display: inline-flex; width: 18px; height: 18px; color: var(--green-deep); flex-shrink: 0; }
   .spec-table .spec-ic svg { width: 18px; height: 18px; }
-  .spec-table td.spec-competitor { color: var(--ink-soft); font-size: 13.5px; padding: 4px 8px; }
-  .spec-table td.spec-oppo {
-    color: var(--ink); font-weight: 600; font-size: 13.5px; border-radius: 6px; padding: 4px 8px;
-    background: var(--green-tint); border-left: 3px solid var(--green);
-  }
+  .spec-table td.spec-competitor, .spec-table td.spec-oppo { color: var(--ink-soft); font-size: 13.5px; padding: 4px 8px; border-radius: 6px; }
+  .spec-table td.spec-win { color: var(--ink); font-weight: 700; background: var(--win-bg); }
+  .spec-table .spec-check { color: var(--win); font-weight: 900; margin-left: 5px; }
+  .spec-table .spec-antutu { display: block; font-size: 10.5px; color: var(--ink-faint); font-weight: 600; margin-top: 2px; }
   .spec-table tr.spec-head { padding: 0 0 6px; }
   .spec-table tr.spec-head td { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 0 8px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spec-table td.spec-h-comp { color: var(--ink-faint); }
-  .spec-table td.spec-h-oppo { color: var(--green-deep); padding-left: 11px; }
+  .spec-table td.spec-h-oppo { color: var(--green-deep); }
 
   .pitch-card {
     margin-top: 20px; background: var(--surface); border: 1px solid var(--border);
@@ -2451,6 +2454,61 @@ if ("serviceWorker" in navigator) {
     return card;
   }
 
+  // ---------- quién gana en cada dato (opción C) ----------
+  // Puntuación AnTuTu aproximada de cada procesador (se rellena con datos de Kimovil/nanoreview)
+  var ANTUTU = {};
+  function chipKey(s) {
+    return String(s || "").toLowerCase().replace(/mediatek|qualcomm|samsung|google|unisoc|helio|mobile|\(.*?\)/g, "")
+      .replace(/[^a-z0-9]/g, "");
+  }
+  function antutuOf(s) { var k = chipKey(s); return k && ANTUTU[k] ? ANTUTU[k] : null; }
+  function nums(re, s) {
+    var out = [], m; s = String(s || "").toLowerCase().replace(/,/g, ".");
+    while ((m = re.exec(s))) out.push(parseFloat(m[1]) * (m[2] && /tb/.test(m[2]) ? 1024 : 1));
+    return out;
+  }
+  function maxOf(a) { return a.length ? Math.max.apply(null, a) : null; }
+  function cmp(x, y, minDiff) {
+    if (x == null || y == null) return null;
+    if (Math.abs(x - y) <= (minDiff || 0)) return null;
+    return x > y ? "c" : "o";
+  }
+  function specWinner(field, c, o) {
+    var re;
+    switch (field) {
+      case "RAM": case "Almacenamiento":
+        re = /(\d+(?:\.\d+)?)\s*(gb|tb)/g; return cmp(maxOf(nums(re, c)), maxOf(nums(/(\d+(?:\.\d+)?)\s*(gb|tb)/g, o)));
+      case "Batería":
+        return cmp(maxOf(nums(/(\d{3,5})\s*(mah)?/g, c)), maxOf(nums(/(\d{3,5})\s*(mah)?/g, o)), 50);
+      case "Carga rápida":
+        return cmp(maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, c)), maxOf(nums(/(\d+(?:\.\d+)?)\s*(w)\b/g, o)));
+      case "Cámara principal": case "Cámara frontal":
+        var fc = nums(/(\d+(?:\.\d+)?)\s*(mpx|mp)/g, c)[0], fo = nums(/(\d+(?:\.\d+)?)\s*(mpx|mp)/g, o)[0];
+        return cmp(fc == null ? null : fc, fo == null ? null : fo);
+      case "Resistencia (IP)":
+        var ip = function (s) {
+          s = String(s || "").toLowerCase(); var i = s.indexOf("ip"); if (i < 0) return null;
+          var best = null, m, r = /(\d)(\d|x)/g; r.lastIndex = i;
+          while ((m = r.exec(s))) { var v = (m[2] === "x" ? 0 : parseInt(m[2], 10)) * 10 + parseInt(m[1], 10); if (best == null || v > best) best = v; }
+          var extra = s.match(/\/\s*(\d)(\d)?\b/g); // IP68/69
+          if (extra) extra.forEach(function (x) { var d = x.replace(/\D/g, ""); if (d.length === 2) { var v2 = parseInt(d[1], 10) * 10 + parseInt(d[0], 10); if (v2 > best) best = v2; } });
+          return best;
+        };
+        return cmp(ip(c), ip(o));
+      case "Pantalla":
+        var typ = function (s) { s = String(s).toLowerCase(); return /amoled|oled/.test(s) ? 1 : (/lcd|ips/.test(s) ? 0 : null); };
+        var tc = typ(c), to = typ(o);
+        if (tc != null && to != null && tc !== to) return tc > to ? "c" : "o";
+        return cmp(maxOf(nums(/(\d{2,3})\s*(hz)/g, c)), maxOf(nums(/(\d{2,3})\s*(hz)/g, o)));
+      case "Procesador":
+        var ac = antutuOf(c), ao = antutuOf(o);
+        if (ac == null || ao == null) return null;
+        return cmp(ac, ao, Math.max(ac, ao) * 0.05); // menos de un 5 % de diferencia: empate
+    }
+    return null;
+  }
+  function fmtAntutu(n) { return n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : Math.round(n / 1000) + " mil"; }
+
   // ---------- comparison result ----------
   function showComparison() {
     var competitor = findModel(state.selectedCompetitorModelId);
@@ -2497,6 +2555,15 @@ if ("serviceWorker" in navigator) {
       tdLabel.appendChild(document.createTextNode(field));
       var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? competitor.specs[field] : "—");
       var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? oppo.specs[field] : "—");
+      if (field === "Procesador") {
+        [[tdComp, vC], [tdOppo, vO]].forEach(function (pair) {
+          var sc = antutuOf(pair[1]);
+          if (sc) pair[0].appendChild(el("small", "spec-antutu", "AnTuTu ≈ " + fmtAntutu(sc)));
+        });
+      }
+      var win = specWinner(field, vC, vO);
+      var wTd = win === "c" ? tdComp : (win === "o" ? tdOppo : null);
+      if (wTd) { wTd.classList.add("spec-win"); wTd.appendChild(el("span", "spec-check", "✓")); }
       tr.appendChild(tdLabel); tr.appendChild(tdComp); tr.appendChild(tdOppo);
       table.appendChild(tr);
     });
