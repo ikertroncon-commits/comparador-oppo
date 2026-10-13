@@ -21,7 +21,10 @@ service cloud.firestore {
     match /dispositivos/{email} {
       allow read: if isAdmin() || (signedIn() && request.auth.token.email.lower() == email);
       allow create: if signedIn() && request.auth.token.email.lower() == email;
-      allow update, delete: if isAdmin();
+      // Paso a la app nativa: el propio vendedor puede cambiar un vínculo de Chrome (d…) por el de la app (a_…)
+      allow update: if isAdmin() || (signedIn() && request.auth.token.email.lower() == email
+        && resource.data.id.matches('d.*') && request.resource.data.id.matches('a_.*'));
+      allow delete: if isAdmin();
     }
 
     // Ajustes de acceso (si la lista está activada)
