@@ -21,6 +21,274 @@
     if (t === "light") document.documentElement.setAttribute("data-theme", "light");
   })();
 </script>
+<script>
+// Idiomas: español (por defecto), inglés, chino tradicional y portugués.
+// La interfaz se traduce sola: cada texto en español que aparece en pantalla se cambia
+// por su traducción de este diccionario (el panel de administración queda en español).
+// El contenido (especificaciones, argumentos, conceptos) viene traducido de Firebase.
+(function () {
+  "use strict";
+  var LANGS = [
+    { id: "es", short: "ES", name: "Español" },
+    { id: "en", short: "EN", name: "English" },
+    { id: "zh", short: "繁", name: "繁體中文" },
+    { id: "pt", short: "PT", name: "Português" }
+  ];
+  var HTML_LANG = { es: "es", en: "en", zh: "zh-Hant", pt: "pt-PT" };
+  // "texto en español": [inglés, portugués, chino tradicional]
+  var D = {
+    "Comparar": ["Compare", "Comparar", "比較"],
+    "Administrar": ["Admin", "Administrar", "管理"],
+    "Cambiar a modo claro": ["Switch to light mode", "Mudar para modo claro", "切換為淺色模式"],
+    "Cambiar a modo oscuro": ["Switch to dark mode", "Mudar para modo escuro", "切換為深色模式"],
+    "Modo claro / oscuro": ["Light / dark mode", "Modo claro / escuro", "淺色／深色模式"],
+    "Idioma": ["Language", "Idioma", "語言"],
+    "Escanear código": ["Scan code", "Ler código", "掃描條碼"],
+    "Escanea el código de barras de la caja y te llevo al modelo": ["Scan the barcode on the box and I'll take you to the model", "Lê o código de barras da caixa e levo-te ao modelo", "掃描包裝盒上的條碼，即可前往該機型"],
+    "Paso 1 · Marca competidora": ["Step 1 · Competitor brand", "Passo 1 · Marca concorrente", "步驟 1 · 競爭品牌"],
+    "Intereses del cliente": ["Customer interests", "Interesses do cliente", "顧客需求"],
+    "Otros productos OPPO": ["Other OPPO products", "Outros produtos OPPO", "其他 OPPO 產品"],
+    "Conceptos Telefonía": ["Phone concepts", "Conceitos de telemóveis", "手機術語"],
+    "Glosario de conceptos": ["Glossary of concepts", "Glossário de conceitos", "術語詞彙表"],
+    "Aún no hay marcas ni modelos cargados.": ["No brands or models loaded yet.", "Ainda não há marcas nem modelos carregados.", "尚未載入任何品牌或機型。"],
+    "Pide al administrador que los añada desde la pestaña Administrar.": ["Ask the administrator to add them from the Admin tab.", "Pede ao administrador que os adicione no separador Administrar.", "請管理員在「管理」分頁中新增。"],
+    "Volver a marcas": ["Back to brands", "Voltar às marcas", "返回品牌"],
+    "Paso 2 · Modelo": ["Step 2 · Model", "Passo 2 · Modelo", "步驟 2 · 機型"],
+    "Paso 3 · Modelo": ["Step 3 · Model", "Passo 3 · Modelo", "步驟 3 · 機型"],
+    "Buscar modelo por nombre...": ["Search model by name...", "Procurar modelo pelo nome...", "依名稱搜尋機型..."],
+    "Buscar modelo OPPO...": ["Search OPPO model...", "Procurar modelo OPPO...", "搜尋 OPPO 機型..."],
+    "Elige una gama para ver sus modelos": ["Choose a series to see its models", "Escolhe uma gama para ver os modelos", "選擇系列以查看機型"],
+    "Recomendado para este modelo": ["Recommended for this model", "Recomendado para este modelo", "推薦給此機型"],
+    "Argumento de venta": ["Sales pitch", "Argumento de venda", "銷售話術"],
+    "Editar comentario": ["Edit comment", "Editar comentário", "編輯說明"],
+    "Guardar": ["Save", "Guardar", "儲存"],
+    "Cancelar": ["Cancel", "Cancelar", "取消"],
+    "Nueva comparación": ["New comparison", "Nova comparação", "重新比較"],
+    "Volver al menú": ["Back to menu", "Voltar ao menu", "返回主選單"],
+    "Volver a modelos": ["Back to models", "Voltar aos modelos", "返回機型"],
+    "Volver a categorías": ["Back to categories", "Voltar às categorias", "返回分類"],
+    "Buscar en esta categoría...": ["Search this category...", "Procurar nesta categoria...", "在此分類中搜尋..."],
+    "Añadir concepto": ["Add concept", "Adicionar conceito", "新增術語"],
+    "Alternativas OPPO para": ["OPPO alternatives to", "Alternativas OPPO para", "OPPO 替代機型："],
+    "Escanear código de barras": ["Scan barcode", "Ler código de barras", "掃描條碼"],
+    "Apunta al código de barras de la caja del móvil.": ["Point at the barcode on the phone's box.", "Aponta para o código de barras da caixa do telemóvel.", "請對準手機包裝盒上的條碼。"],
+    "¿No lo lee? Escribe los números del código:": ["Not reading? Type the barcode numbers:", "Não lê? Escreve os números do código:", "無法讀取？請輸入條碼數字："],
+    "Ej. 8436...": ["E.g. 8436...", "Ex. 8436...", "例如 8436..."],
+    "Buscar": ["Search", "Procurar", "搜尋"],
+    "Su competencia": ["Its competitors", "A sua concorrência", "競爭機型"],
+    "Toca un modelo para ver la comparativa con este OPPO.": ["Tap a model to see the comparison with this OPPO.", "Toca num modelo para ver a comparação com este OPPO.", "點選機型即可查看與此 OPPO 的比較。"],
+    "Cerrar sesión": ["Log out", "Terminar sessão", "登出"],
+    "Cerrar sesión (administrador)": ["Log out (administrator)", "Terminar sessão (administrador)", "登出（管理員）"],
+    "Inicia sesión con el usuario que te ha dado tu responsable.": ["Log in with the user your manager gave you.", "Inicia sessão com o utilizador que o teu responsável te deu.", "請使用主管提供的帳號登入。"],
+    "Correo": ["Email", "E-mail", "電子郵件"],
+    "Contraseña": ["Password", "Palavra-passe", "密碼"],
+    "Mostrar contraseña": ["Show password", "Mostrar palavra-passe", "顯示密碼"],
+    "Ocultar contraseña": ["Hide password", "Ocultar palavra-passe", "隱藏密碼"],
+    "Entrar": ["Log in", "Entrar", "登入"],
+    "¿Has olvidado la contraseña?": ["Forgot your password?", "Esqueceste-te da palavra-passe?", "忘記密碼？"],
+    "Usuario registrado en otro dispositivo. Si has cambiado de móvil, pide a tu responsable que lo libere.": ["User registered on another device. If you've changed phones, ask your manager to release it.", "Utilizador registado noutro dispositivo. Se mudaste de telemóvel, pede ao teu responsável que o liberte.", "此帳號已在其他裝置登記。若你已更換手機，請主管解除綁定。"],
+    "Tu usuario no tiene acceso. Pide a tu responsable que te autorice.": ["Your user doesn't have access. Ask your manager to authorise you.", "O teu utilizador não tem acesso. Pede ao teu responsável que te autorize.", "你的帳號沒有存取權限，請主管為你授權。"],
+    "Correo o contraseña incorrectos.": ["Wrong email or password.", "E-mail ou palavra-passe incorretos.", "電子郵件或密碼錯誤。"],
+    "Escribe tu correo y vuelve a pulsar.": ["Type your email and tap again.", "Escreve o teu e-mail e volta a tocar.", "請輸入電子郵件後再按一次。"],
+    "Te hemos enviado un correo para cambiar la contraseña.": ["We've sent you an email to change your password.", "Enviámos-te um e-mail para alterares a palavra-passe.", "我們已寄送變更密碼的電子郵件給你。"],
+    "No se pudo enviar el correo. Revisa la dirección.": ["The email couldn't be sent. Check the address.", "Não foi possível enviar o e-mail. Verifica o endereço.", "無法寄送電子郵件，請確認地址。"],
+    "No se pudo cargar la app. Comprueba tu conexión a internet.": ["The app couldn't load. Check your internet connection.", "Não foi possível carregar a app. Verifica a ligação à internet.", "無法載入應用程式，請檢查網路連線。"],
+    "No se pudo conectar con la base de datos. Recarga la página.": ["Couldn't connect to the database. Reload the page.", "Não foi possível ligar à base de dados. Recarrega a página.", "無法連線至資料庫，請重新整理頁面。"],
+    "Escribe el código completo (normalmente 13 números).": ["Type the full code (usually 13 digits).", "Escreve o código completo (normalmente 13 números).", "請輸入完整條碼（通常為 13 位數字）。"],
+    "Este navegador no permite usar la cámara. Escribe el código abajo.": ["This browser can't use the camera. Type the code below.", "Este navegador não permite usar a câmara. Escreve o código abaixo.", "此瀏覽器無法使用相機，請在下方輸入條碼。"],
+    "Abriendo la cámara…": ["Opening the camera…", "A abrir a câmara…", "正在開啟相機…"],
+    "No se pudo abrir la cámara. Revisa que la app tenga permiso de cámara o escribe el código abajo.": ["Couldn't open the camera. Check the app has camera permission or type the code below.", "Não foi possível abrir a câmara. Verifica se a app tem permissão de câmara ou escreve o código abaixo.", "無法開啟相機。請確認應用程式已取得相機權限，或在下方輸入條碼。"],
+    "Este móvil no puede leer códigos con la cámara. Escribe el código abajo.": ["This phone can't read codes with the camera. Type the code below.", "Este telemóvel não consegue ler códigos com a câmara. Escreve o código abaixo.", "此手機無法用相機讀取條碼，請在下方輸入。"],
+    "Código leído: {0}": ["Code read: {0}", "Código lido: {0}", "已讀取條碼：{0}"],
+    "No tenemos ningún modelo con el código {0}.": ["We don't have any model with code {0}.", "Não temos nenhum modelo com o código {0}.", "找不到條碼為 {0} 的機型。"],
+    "Avisa a tu responsable para que lo añada.": ["Let your manager know so they can add it.", "Avisa o teu responsável para que o adicione.", "請通知主管新增。"],
+    "Escanear otro": ["Scan another", "Ler outro", "掃描下一個"],
+    "OPPO · {0}": ["OPPO · {0}", "OPPO · {0}", "OPPO · {0}"],
+    "Todavía no hay modelos de la competencia asociados a este OPPO. Se asocian en Administrar, editando el modelo de la competencia, en «Alternativas OPPO recomendadas».": ["No competitor models are linked to this OPPO yet. They're linked in Admin, by editing the competitor model, under «Recommended OPPO alternatives».", "Ainda não há modelos da concorrência associados a este OPPO. Associam-se em Administrar, editando o modelo da concorrência, em «Alternativas OPPO recomendadas».", "此 OPPO 尚未關聯任何競爭機型。可在「管理」中編輯競爭機型，於「推薦 OPPO 替代機型」中設定。"],
+    "Pantalla": ["Display", "Ecrã", "螢幕"],
+    "Procesador": ["Processor", "Processador", "處理器"],
+    "RAM": ["RAM", "RAM", "RAM"],
+    "Almacenamiento": ["Storage", "Armazenamento", "儲存空間"],
+    "Batería": ["Battery", "Bateria", "電池"],
+    "Carga rápida": ["Fast charging", "Carregamento rápido", "快速充電"],
+    "Cámara principal": ["Main camera", "Câmara principal", "主相機"],
+    "Cámara frontal": ["Front camera", "Câmara frontal", "前置相機"],
+    "Resistencia (IP)": ["Resistance (IP)", "Resistência (IP)", "防護等級 (IP)"],
+    "Precio": ["Price", "Preço", "價格"],
+    "Autonomía": ["Battery life", "Autonomia", "續航力"],
+    "Sistema operativo": ["Operating system", "Sistema operativo", "作業系統"],
+    "Oxígeno en sangre": ["Blood oxygen", "Oxigénio no sangue", "血氧"],
+    "Frecuencia cardíaca": ["Heart rate", "Frequência cardíaca", "心率"],
+    "Posibilidad de pagar": ["Payments", "Pagamentos", "支付功能"],
+    "Tipo": ["Type", "Tipo", "類型"],
+    "Cancelación de ruido": ["Noise cancelling", "Cancelamento de ruído", "降噪"],
+    "Conexión Bluetooth": ["Bluetooth connection", "Ligação Bluetooth", "藍牙連線"],
+    "Resistencia al agua": ["Water resistance", "Resistência à água", "防水"],
+    "Cámaras": ["Cameras", "Câmaras", "相機"],
+    "Rendimiento": ["Performance", "Desempenho", "效能"],
+    "Software": ["Software", "Software", "軟體"],
+    "Conectividad": ["Connectivity", "Conectividade", "連線功能"],
+    "Resistencia": ["Durability", "Resistência", "耐用度"],
+    "Webs interesantes": ["Useful websites", "Sites interessantes", "實用網站"],
+    "Otros": ["Other", "Outros", "其他"],
+    "Sin conceptos todavía": ["No concepts yet", "Ainda sem conceitos", "尚無術語"],
+    "1 concepto": ["1 concept", "1 conceito", "1 個術語"],
+    "{0} conceptos": ["{0} concepts", "{0} conceitos", "{0} 個術語"],
+    "Sin resultados para \"{0}\"": ["No results for \"{0}\"", "Sem resultados para \"{0}\"", "找不到「{0}」的結果"],
+    "Aún no hay conceptos en esta categoría. Pulsa «+ Añadir concepto».": ["No concepts in this category yet. Tap «+ Add concept».", "Ainda não há conceitos nesta categoria. Toca em «+ Adicionar conceito».", "此分類尚無術語。請點選「+ 新增術語」。"],
+    "Todavía no hay conceptos en esta categoría.": ["There are no concepts in this category yet.", "Ainda não há conceitos nesta categoria.", "此分類目前尚無術語。"],
+    "(sin título)": ["(untitled)", "(sem título)", "（無標題）"],
+    "Editar": ["Edit", "Editar", "編輯"],
+    "Eliminar": ["Delete", "Eliminar", "刪除"],
+    "Cliente busca la mejor experiencia en cámaras": ["Customer wants the best camera experience", "Cliente procura a melhor experiência de câmara", "顧客追求最佳拍照體驗"],
+    "Quiero un terminal para jugar": ["I want a phone for gaming", "Quero um telemóvel para jogar", "我想要一支適合玩遊戲的手機"],
+    "Relojes": ["Watches", "Relógios", "智慧手錶"],
+    "Auriculares": ["Earbuds", "Auriculares", "耳機"],
+    "Aún no has asignado modelos a este interés (hazlo en Administrar)": ["You haven't assigned models to this interest yet (do it in Admin)", "Ainda não atribuíste modelos a este interesse (faz isso em Administrar)", "你尚未為此需求指定機型（請至「管理」設定）"],
+    "Sin recomendaciones todavía": ["No recommendations yet", "Ainda sem recomendações", "尚無推薦"],
+    "Todavía no has añadido ningún argumento de venta para este interés.": ["You haven't added a sales pitch for this interest yet.", "Ainda não adicionaste nenhum argumento de venda para este interesse.", "你尚未為此需求新增銷售話術。"],
+    "Todavía no hay un argumento de venta para este interés.": ["There's no sales pitch for this interest yet.", "Ainda não há um argumento de venda para este interesse.", "此需求目前尚無銷售話術。"],
+    "Todavía no has añadido ningún argumento de venta para este modelo.": ["You haven't added a sales pitch for this model yet.", "Ainda não adicionaste nenhum argumento de venda para este modelo.", "你尚未為此機型新增銷售話術。"],
+    "Todavía no hay un argumento de venta para este modelo.": ["There's no sales pitch for this model yet.", "Ainda não há um argumento de venda para este modelo.", "此機型目前尚無銷售話術。"],
+    "Todavía no has añadido ningún argumento de venta para esta comparación.": ["You haven't added a sales pitch for this comparison yet.", "Ainda não adicionaste nenhum argumento de venda para esta comparação.", "你尚未為此比較新增銷售話術。"],
+    "Todavía no hay un argumento de venta para esta comparación.": ["There's no sales pitch for this comparison yet.", "Ainda não há um argumento de venda para esta comparação.", "此比較目前尚無銷售話術。"],
+    "{0}/{1} datos": ["{0}/{1} specs", "{0}/{1} dados", "{0}/{1} 項資料"],
+    "Aún no has añadido modelos en {0} (hazlo en Administrar)": ["You haven't added models in {0} yet (do it in Admin)", "Ainda não adicionaste modelos em {0} (faz isso em Administrar)", "你尚未在{0}中新增機型（請至「管理」設定）"],
+    "Sin modelos todavía": ["No models yet", "Ainda sem modelos", "尚無機型"],
+    "Sin marcas todavía": ["No brands yet", "Ainda sem marcas", "尚無品牌"],
+    "Sin modelos de {0}": ["No {0} models", "Sem modelos {0}", "尚無 {0} 機型"],
+    "Selecciona una gama arriba": ["Select a series above", "Seleciona uma gama acima", "請先在上方選擇系列"],
+    "Marca OPPO no configurada": ["OPPO brand not set up", "Marca OPPO não configurada", "尚未設定 OPPO 品牌"],
+    "Sin modelos todavía en {0}": ["No models in {0} yet", "Ainda sem modelos em {0}", "{0}尚無機型"],
+    "Gama Numérica": ["Number series", "Gama Numérica", "數字系列"],
+    "Gama Pro XL": ["Pro XL series", "Gama Pro XL", "Pro XL 系列"],
+    "Gama {0}": ["{0} series", "Gama {0}", "{0} 系列"],
+    "Comentario guardado": ["Comment saved", "Comentário guardado", "說明已儲存"],
+    "No se pudo guardar": ["Couldn't save", "Não foi possível guardar", "無法儲存"],
+    "Concepto añadido": ["Concept added", "Conceito adicionado", "已新增術語"],
+    "Concepto actualizado": ["Concept updated", "Conceito atualizado", "已更新術語"],
+    "Concepto eliminado": ["Concept deleted", "Conceito eliminado", "已刪除術語"]
+  };
+  var IDX = { en: 0, pt: 1, zh: 2 };
+
+  var lang = "es";
+  try { var saved = localStorage.getItem("comparador-idioma"); if (IDX[saved] !== undefined) lang = saved; } catch (e) {}
+
+  var exact = {}, patterns = [];
+  Object.keys(D).forEach(function (k) {
+    if (k.indexOf("{0}") === -1) { exact[k] = D[k]; return; }
+    var src = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\{(\d)\\\}/g, "(.+?)");
+    patterns.push({ re: new RegExp("^" + src + "$"), out: D[k] });
+  });
+
+  function lookup(s) {
+    if (lang === "es") return null;
+    var i = IDX[lang];
+    if (exact[s]) return exact[s][i];
+    for (var p = 0; p < patterns.length; p++) {
+      var m = patterns[p].re.exec(s);
+      if (m) {
+        return patterns[p].out[i].replace(/\{(\d)\}/g, function (_, n) {
+          var g = m[+n + 1]; var tg = exact[g]; return tg ? tg[i] : g;
+        });
+      }
+    }
+    return null;
+  }
+  // Traduce un texto conservando iconos/flechas del principio y espacios o «:» del final
+  function t(s) {
+    if (lang === "es" || s == null) return s;
+    var str = String(s);
+    var core = str.replace(/\s+/g, " ").trim();
+    if (!core) return str;
+    var direct = lookup(core);
+    if (direct != null) return str.replace(/^(\s*)[\s\S]*?(\s*)$/, function (_, a, b) { return a + direct + b; });
+    var m = /^(\s*[^\p{L}\p{N}¿¡"«(]*)([\s\S]*?)([\s:]*)$/u.exec(str);
+    if (m && m[2]) {
+      var inner = m[2].replace(/\s+/g, " ").trim();
+      var tr = lookup(inner);
+      if (tr != null) return m[1] + tr + m[3];
+    }
+    return str;
+  }
+
+  // ---- traducción automática de lo que aparece en pantalla ----
+  var origText = new WeakMap(), shownText = new WeakMap();
+  var ATTRS = ["placeholder", "aria-label", "title"];
+  var origAttr = new WeakMap();
+  function skip(node) {
+    var e = node.nodeType === 1 ? node : node.parentElement;
+    if (!e) return true;
+    // contenido de la base de datos (nombres, especificaciones, argumentos, conceptos): lo traduce la app aparte
+    return !!e.closest("#view-admin, script, style, textarea, .no-tr, .concept-body, .concept-item summary, .pitch-text:not(.empty), " +
+      ".m-name, .spec-competitor, .spec-oppo, .spec-head, .vs-side, .ro-name, .brand-name, .rivals-brand, .d-name, .d-val, #concept-form, select");
+  }
+  function doText(n) {
+    if (skip(n)) return;
+    var cur = n.nodeValue;
+    if (shownText.has(n) && shownText.get(n) === cur) {
+      // ya traducido; si cambia el idioma se recalcula desde el original
+      var o = origText.get(n), nv = t(o);
+      if (nv !== cur) { shownText.set(n, nv); n.nodeValue = nv; }
+      return;
+    }
+    origText.set(n, cur);
+    var out = t(cur);
+    shownText.set(n, out);
+    if (out !== cur) n.nodeValue = out;
+  }
+  function doAttrs(e) {
+    if (skip(e)) return;
+    var map = origAttr.get(e) || {};
+    ATTRS.forEach(function (a) {
+      if (!e.hasAttribute(a)) return;
+      var cur = e.getAttribute(a), rec = map[a];
+      var orig = (rec && rec.shown === cur) ? rec.orig : cur;
+      var out = t(orig);
+      map[a] = { orig: orig, shown: out };
+      if (out !== cur) e.setAttribute(a, out);
+    });
+    origAttr.set(e, map);
+  }
+  function walk(root) {
+    if (!root) return;
+    if (root.nodeType === 3) { doText(root); return; }
+    if (root.nodeType !== 1) return;
+    doAttrs(root);
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    var n;
+    while ((n = w.nextNode())) { if (n.nodeType === 3) doText(n); else doAttrs(n); }
+  }
+  var obs = new MutationObserver(function (list) {
+    list.forEach(function (m) {
+      if (m.type === "characterData") doText(m.target);
+      else if (m.type === "attributes") doAttrs(m.target);
+      else m.addedNodes.forEach(walk);
+    });
+  });
+  obs.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+
+  var listeners = [];
+  function setLang(l) {
+    if (l !== "es" && IDX[l] === undefined) l = "es";
+    lang = l;
+    try { localStorage.setItem("comparador-idioma", l); } catch (e) {}
+    document.documentElement.lang = HTML_LANG[l];
+    if (document.body) walk(document.body);
+    listeners.forEach(function (fn) { try { fn(l); } catch (e) { console.error(e); } });
+    try { if (window.AndroidApp && window.AndroidApp.setWidgetData) window.AndroidApp.setWidgetData(JSON.stringify({ idioma: l })); } catch (e) {}
+  }
+  document.documentElement.lang = HTML_LANG[lang];
+
+  window.I18N = {
+    langs: LANGS,
+    get lang() { return lang; },
+    t: t,
+    set: setLang,
+    onChange: function (fn) { listeners.push(fn); }
+  };
+})();
+</script>
 <style>
   :root {
     --bg: #14141F;
@@ -94,6 +362,20 @@
   html[data-theme="light"] .theme-btn .ic-sun { display: block; }
   html[data-theme="light"] .theme-btn .ic-moon { display: none; }
   .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .lang-wrap { position: relative; }
+  .lang-btn span { font-size: 12.5px; font-weight: 800; letter-spacing: .02em; }
+  .lang-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 168px; padding: 6px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+  .lang-menu button, .lang-pills button { font-family: var(--font); cursor: pointer; color: var(--ink); }
+  .lang-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px;
+    background: none; font-size: 14.5px; font-weight: 600; text-align: left; }
+  .lang-menu button .code { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 22px; border-radius: 6px;
+    background: var(--surface-sunken); font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+  .lang-menu button[aria-checked="true"] { background: var(--win-bg); }
+  .lang-menu button[aria-checked="true"] .code { background: var(--win); color: #fff; }
+  .lang-pills { display: flex; justify-content: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .lang-pills button { padding: 6px 9px; border-radius: 999px; border: 1px solid var(--border); background: none; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+  .lang-pills button[aria-pressed="true"] { background: var(--gradient); color: #fff; border-color: transparent; }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   * { box-sizing: border-box; }
   html, body {
@@ -551,6 +833,10 @@ if ("serviceWorker" in navigator) {
         <button class="tab-btn active" data-tab="compare">Comparar</button>
         <button class="tab-btn" data-tab="admin">Administrar</button>
       </nav>
+      <div class="lang-wrap no-tr">
+        <button id="lang-btn" class="theme-btn lang-btn" type="button" aria-label="Idioma" title="Idioma" aria-haspopup="true" aria-expanded="false"><span id="lang-btn-txt">ES</span></button>
+        <div id="lang-menu" class="lang-menu" role="menu" hidden></div>
+      </div>
       <button id="theme-btn" class="theme-btn" type="button" aria-label="Cambiar a modo claro" title="Modo claro / oscuro"><svg class="ic-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="ic-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg></button>
     </div>
   </div>
@@ -821,6 +1107,7 @@ if ("serviceWorker" in navigator) {
     <p id="fb-error" class="fb-error"></p>
     <button id="fb-login-go" class="primary-btn" type="submit">Entrar</button>
     <button id="fb-forgot" class="link-btn" type="button">¿Has olvidado la contraseña?</button>
+    <div id="lang-pills" class="lang-pills no-tr"></div>
   </form>
 </div>
 <div id="toast" class="toast"></div>
@@ -1092,7 +1379,7 @@ if ("serviceWorker" in navigator) {
   // ---- exportar copia de seguridad ----
   window.fbExport = async function () {
     var fb = await init();
-    var cols = ["brands", "models", "comparisons", "interests", "accessories", "concepts", "assets", "vendedores", "ajustes"];
+    var cols = ["brands", "models", "comparisons", "interests", "accessories", "concepts", "assets", "vendedores", "ajustes", "traducciones"];
     var out = {}, total = 0;
     for (var ci = 0; ci < cols.length; ci++) {
       var snap = await fb.db.collection(cols[ci]).get();
@@ -1243,6 +1530,58 @@ if ("serviceWorker" in navigator) {
   function findModel(id) { return state.models.filter(function (m) { return m.id === id; })[0]; }
   function pairId(competitorId, oppoId) { return competitorId + ":" + oppoId; }
 
+  // ---------- contenido traducido (colección "traducciones", un documento por idioma) ----------
+  // Cada texto en español se identifica por una huella; si el administrador lo cambia,
+  // la huella cambia y se muestra en español hasta que se traduzca la versión nueva.
+  var I18N = window.I18N;
+  var tr = { lang: "es", map: {}, unsub: null };
+  function huella(s) {
+    s = String(s).replace(/\r\n/g, "\n").trim();
+    var x = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 0x01000193) >>> 0; }
+    return "h" + x.toString(36) + "_" + s.length.toString(36);
+  }
+  function C(s) {
+    if (!s || tr.lang === "es") return s;
+    var v = tr.map[huella(s)];
+    return v || s;
+  }
+  function T(s) { return I18N.t(s); }
+  // Especificaciones: además, en inglés y chino se usa punto decimal (6,7" → 6.7")
+  function SV(s) {
+    var v = C(s);
+    if (v && (tr.lang === "en" || tr.lang === "zh")) v = String(v).replace(/(\d),(\d)/g, "$1.$2");
+    return v;
+  }
+  function loadTranslations(lang) {
+    if (tr.unsub) { tr.unsub(); tr.unsub = null; }
+    tr.lang = lang; tr.map = {};
+    if (lang === "es" || !state.db) { rerenderAll(); return; }
+    tr.unsub = state.db.collection("traducciones").doc(lang).onSnapshot(function (snap) {
+      var d = snap && snap.exists ? snap.data() : null;
+      tr.map = (d && d.t) || {};
+      rerenderAll();
+    }, function (err) { console.warn("traducciones", err); rerenderAll(); });
+    rerenderAll();
+  }
+  function rerenderAll() {
+    if (!state.brands.length) return; // aún cargando: ya se pintará al llegar los datos
+    renderBrandChips();
+    refreshCompetitorStep();
+    refreshOppoStep();
+    renderConcepts();
+    renderInterestButtons();
+    renderInterestResult();
+    renderAccessoryCategoryButtons();
+    renderAccessoryResult();
+    if (!$("view-rivals").hidden && state.rivalsOppo) renderOppoRivals(state.rivalsOppo);
+    if (state.quickCompareOpen) {
+      var qc = findModel(state.selectedCompetitorModelId);
+      if (qc) $("quick-competitor-name").textContent = qc.name;
+    }
+    if (!$("comparison-result").hidden) showComparison(true);
+  }
+
   // ---------- boot ----------
   async function boot() {
     if (!window.claude || !window.claude.use) {
@@ -1268,6 +1607,9 @@ if ("serviceWorker" in navigator) {
       state.assets = await window.claude.use("assets");
     }
 
+    tr.lang = I18N.lang;
+    if (tr.lang !== "es") loadTranslations(tr.lang);
+    I18N.onChange(loadTranslations);
     subscribeBrands();
     subscribeModels();
     subscribeInterests();
@@ -1566,6 +1908,7 @@ if ("serviceWorker" in navigator) {
   }
 
   function renderOppoRivals(oppo) {
+    state.rivalsOppo = oppo;
     var head = $("rivals-oppo"); head.innerHTML = "";
     if (oppo.imageId) {
       var img = document.createElement("img"); img.src = blobSrc(oppo.imageId); img.alt = oppo.name; head.appendChild(img);
@@ -1579,7 +1922,7 @@ if ("serviceWorker" in navigator) {
       if (!v || /^[\s.\-–]*$/.test(v)) return;
       var li = document.createElement("li");
       li.appendChild(el("b", null, f + ": "));
-      li.appendChild(document.createTextNode(v));
+      li.appendChild(el("span", "no-tr", SV(v)));
       ul.appendChild(li);
     });
     t.appendChild(ul);
@@ -1740,11 +2083,11 @@ if ("serviceWorker" in navigator) {
     list.innerHTML = "";
     var q = state.conceptSearch;
     var items = state.concepts.slice().sort(function (a, b) {
-      return (a.term || "").localeCompare(b.term || "", "es", { sensitivity: "base" });
+      return (C(a.term) || "").localeCompare(C(b.term) || "", I18N.lang === "zh" ? "zh-Hant" : I18N.lang, { sensitivity: "base" });
     }).filter(function (c) {
       if (conceptSectionId(c) !== state.conceptSection) return false;
       if (!q) return true;
-      return ((c.term || "") + " " + (c.text || "")).toLowerCase().indexOf(q) !== -1;
+      return ((c.term || "") + " " + (c.text || "") + " " + (C(c.term) || "") + " " + (C(c.text) || "")).toLowerCase().indexOf(q) !== -1;
     });
 
     if (items.length === 0) {
@@ -1761,8 +2104,8 @@ if ("serviceWorker" in navigator) {
     function renderConceptItem(c) {
       var item = el("details", "concept-item");
       if (q) item.open = true;
-      item.appendChild(el("summary", null, c.term || "(sin título)"));
-      item.appendChild(linkifiedBody(c.text || ""));
+      item.appendChild(el("summary", null, C(c.term) || T("(sin título)")));
+      item.appendChild(linkifiedBody(C(c.text) || ""));
       if (state.canEdit) {
         var admin = el("div", "concept-admin");
         var edit = el("button", "link-btn", "Editar");
@@ -1985,7 +2328,7 @@ if ("serviceWorker" in navigator) {
         SPEC_FIELDS.forEach(function (field) {
           var tr = document.createElement("tr");
           tr.appendChild(el("td", "d-label", field));
-          tr.appendChild(el("td", null, (model.specs && model.specs[field]) ? model.specs[field] : "—"));
+          tr.appendChild(el("td", "d-val", (model.specs && model.specs[field]) ? SV(model.specs[field]) : "—"));
           table.appendChild(tr);
         });
         box.appendChild(table);
@@ -2179,7 +2522,7 @@ if ("serviceWorker" in navigator) {
         category.specFields.forEach(function (field) {
           var tr = document.createElement("tr");
           tr.appendChild(el("td", "d-label", field));
-          tr.appendChild(el("td", null, (accessory.specs && accessory.specs[field]) ? accessory.specs[field] : "—"));
+          tr.appendChild(el("td", "d-val", (accessory.specs && accessory.specs[field]) ? SV(accessory.specs[field]) : "—"));
           table.appendChild(tr);
         });
         box.appendChild(table);
@@ -2188,7 +2531,7 @@ if ("serviceWorker" in navigator) {
         var pitch = el("div", "pitch-card");
         pitch.appendChild(el("p", "pitch-label", "Argumento de venta"));
         var pitchText = el("p", "pitch-text" + (accessory.comments ? "" : " empty"),
-          accessory.comments || (state.canEdit
+          C(accessory.comments) || (state.canEdit
             ? "Todavía no has añadido ningún argumento de venta para este modelo."
             : "Todavía no hay un argumento de venta para este modelo."));
         pitch.appendChild(pitchText);
@@ -2506,10 +2849,15 @@ if ("serviceWorker" in navigator) {
     }
     return null;
   }
-  function fmtAntutu(n) { return n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : Math.round(n / 1000) + " mil"; }
+  function fmtAntutu(n) {
+    var l = I18N.lang;
+    if (l === "zh") return (n / 1e4 >= 100 ? Math.round(n / 1e4) : (n / 1e4).toFixed(1)) + " 萬";
+    if (l === "en") return n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "K";
+    return n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : Math.round(n / 1000) + " mil";
+  }
 
   // ---------- comparison result ----------
-  function showComparison() {
+  function showComparison(sinDesplazar) {
     var competitor = findModel(state.selectedCompetitorModelId);
     var oppo = findModel(state.selectedOppoModelId);
     if (!competitor || !oppo) return;
@@ -2552,8 +2900,8 @@ if ("serviceWorker" in navigator) {
       var kind = ICON_BY_FIELD[field];
       if (kind && PITCH_ICONS[kind]) { var ic = document.createElement("span"); ic.className = "spec-ic"; ic.innerHTML = PITCH_ICONS[kind]; tdLabel.appendChild(ic); }
       tdLabel.appendChild(document.createTextNode(field));
-      var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? competitor.specs[field] : "—");
-      var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? oppo.specs[field] : "—");
+      var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? SV(competitor.specs[field]) : "—");
+      var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? SV(oppo.specs[field]) : "—");
       if (field === "Procesador") {
         [[tdComp, vC], [tdOppo, vO]].forEach(function (pair) {
           var sc = antutuOf(pair[1]);
@@ -2572,6 +2920,10 @@ if ("serviceWorker" in navigator) {
     });
 
     $("comparison-result").hidden = false;
+    if (sinDesplazar && state.currentComparisonId === pairId(competitor.id, oppo.id) && state.unsub.comparison) {
+      paintComparisonPitch();
+      return;
+    }
     loadComparisonPitch(competitor.id, oppo.id);
     $("comparison-result").scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -2585,8 +2937,12 @@ if ("serviceWorker" in navigator) {
     hidePitchEditor();
 
     state.unsub.comparison = state.db.collection("comparisons").doc(id).onSnapshot(function (snap) {
-      var data = snap.exists ? snap.data() : null;
-      state.currentComparisonData = data;
+      state.currentComparisonData = snap.exists ? snap.data() : null;
+      paintComparisonPitch();
+    }, function (err) { console.error("comparison error", err); });
+  }
+  function paintComparisonPitch() {
+      var data = state.currentComparisonData;
       var textEl = $("pitch-text");
       if (data && data.comments) {
         renderPitch(textEl, data.comments);
@@ -2597,7 +2953,6 @@ if ("serviceWorker" in navigator) {
           : "Todavía no hay un argumento de venta para esta comparación.";
         textEl.classList.add("empty");
       }
-    }, function (err) { console.error("comparison error", err); });
   }
 
   // ---------- argumento de venta con iconos ----------
@@ -2638,18 +2993,24 @@ if ("serviceWorker" in navigator) {
   // Si el texto viene en líneas con guion (- …) se muestra como lista con un icono según el tema de cada línea
   function renderPitch(textEl, text) {
     textEl.innerHTML = "";
+    // Se traduce línea a línea, así una frase ya traducida sirve para todos los argumentos que la usen
     var lines = String(text).split(/\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l; });
     var bulleted = lines.some(function (l) { return /^[-•*·]/.test(l); });
-    if (!bulleted) { textEl.textContent = text; textEl.classList.remove("pitch-list"); return; }
+    if (!bulleted) {
+      textEl.textContent = C(text) !== text ? C(text) : String(text).split(/\n/).map(function (l) { return l.trim() ? C(l.trim()) : l; }).join("\n");
+      textEl.classList.remove("pitch-list");
+      return;
+    }
     textEl.classList.add("pitch-list");
     lines.forEach(function (l) {
       var isItem = /^[-•*·]/.test(l);
-      var clean = l.replace(/^[-•*·]+\s*/, "");
+      var iconFrom = l.replace(/^[-•*·]+\s*/, "");
+      var clean = C(iconFrom);
       var row = document.createElement("span");
       row.className = isItem ? "pitch-item" : "pitch-intro";
       if (isItem) {
         var ic = document.createElement("span");
-        var kind = pitchIcon(clean);
+        var kind = pitchIcon(iconFrom);
         ic.className = "pitch-ic pi-" + kind;
         ic.innerHTML = PITCH_ICONS[kind];
         row.appendChild(ic);
@@ -3462,6 +3823,38 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 <script>
+// Selector de idioma (botón junto al de claro/oscuro y en la pantalla de acceso)
+(function () {
+  "use strict";
+  var I = window.I18N, btn = document.getElementById("lang-btn"), menu = document.getElementById("lang-menu"), pills = document.getElementById("lang-pills");
+  function close() { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+  function paint() {
+    var cur = I.langs.filter(function (l) { return l.id === I.lang; })[0] || I.langs[0];
+    document.getElementById("lang-btn-txt").textContent = cur.short;
+    menu.innerHTML = ""; pills.innerHTML = "";
+    I.langs.forEach(function (l) {
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("role", "menuitemradio"); b.setAttribute("aria-checked", String(l.id === I.lang));
+      var c = document.createElement("span"); c.className = "code"; c.textContent = l.short;
+      b.appendChild(c); b.appendChild(document.createTextNode(l.name));
+      b.addEventListener("click", function () { close(); if (l.id !== I.lang) I.set(l.id); });
+      menu.appendChild(b);
+      var p = document.createElement("button");
+      p.type = "button"; p.textContent = l.name; p.setAttribute("aria-pressed", String(l.id === I.lang));
+      p.addEventListener("click", function () { if (l.id !== I.lang) I.set(l.id); });
+      pills.appendChild(p);
+    });
+  }
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var open = menu.hidden; menu.hidden = !open; btn.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target)) close(); });
+  I.onChange(paint);
+  paint();
+})();
+</script>
+<script>
 // Gesto "atrás" de Android: vuelve a la pantalla anterior dentro de la app y,
 // en el menú principal, no cierra la app (para cerrarla, desde la multitarea).
 // Un paso de historial "guardia" bajo el menú + uno por cada nivel abierto, siempre
@@ -3473,7 +3866,7 @@ if ("serviceWorker" in navigator) {
   function shown(id) { var e = el(id); return !!e && !e.hidden && e.offsetParent !== null; }
   function depth() {
     if (shown("view-quick-compare")) return 2;
-    if (shown("view-concepts")) return /categor/i.test(el("concepts-back-btn").textContent) ? 2 : 1;
+    if (shown("view-concepts")) return el("concept-section-page").hidden ? 1 : 2;
     if (shown("view-brand") || shown("view-section") || shown("view-admin") || shown("view-scan") || shown("view-rivals")) return 1;
     return 0;
   }
