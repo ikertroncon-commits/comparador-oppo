@@ -2891,6 +2891,7 @@ if ("serviceWorker" in navigator) {
     table.appendChild(head);
     SPEC_FIELDS.forEach(function (field) {
       var tr = document.createElement("tr");
+      tr.setAttribute("data-field", field);
       var vC = (competitor.specs && competitor.specs[field]) || "", vO = (oppo.specs && oppo.specs[field]) || "";
       if (/^[\s.\-–—]*$/.test(vC) && /^[\s.\-–—]*$/.test(vO)) return; // sin datos en ninguno: no se muestra
       var tdLabel = el("td", "spec-label");
@@ -2953,6 +2954,29 @@ if ("serviceWorker" in navigator) {
           : "Todavía no hay un argumento de venta para esta comparación.";
         textEl.classList.add("empty");
       }
+      markCamerasFromPitch(data && data.comments);
+  }
+
+  // Cámaras: no se comparan por megapíxeles, sino por lo que dice el argumento de venta.
+  // «Mejor selfie / cámara frontal / selfie con más resolución» → gana la cámara frontal del OPPO.
+  // «Mejor apartado / sistema fotográfico», «comparar las cámaras traseras…» → gana la cámara principal del OPPO.
+  var CAMERA_PITCH_RULES = {
+    "Cámara frontal": /selfie|sefie|selfi\b|c[aá]mara frontal/i,
+    "Cámara principal": /apartado fotogr|sistema fotogr|post ?procesado|c[aá]maras traseras|comparar las c[aá]maras/i
+  };
+  function markCamerasFromPitch(text) {
+    var lines = String(text || "").split(/\n/);
+    Object.keys(CAMERA_PITCH_RULES).forEach(function (field) {
+      var row = document.querySelector('#spec-table tr[data-field="' + field + '"]');
+      if (!row) return;
+      var td = row.querySelector(".spec-oppo");
+      row.querySelectorAll(".spec-pitch-win").forEach(function (c) { c.classList.remove("spec-win", "spec-pitch-win"); var k = c.querySelector(".spec-check"); if (k) k.remove(); });
+      if (!td || td.textContent.trim() === "—") return;
+      var wins = lines.some(function (l) { return CAMERA_PITCH_RULES[field].test(l); });
+      if (!wins) return;
+      td.classList.add("spec-win", "spec-pitch-win");
+      td.appendChild(el("span", "spec-check", "✓"));
+    });
   }
 
   // ---------- argumento de venta con iconos ----------
