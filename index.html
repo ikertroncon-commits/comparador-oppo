@@ -1602,6 +1602,23 @@ if ("serviceWorker" in navigator) {
   function SV(s) {
     var v = C(s);
     if (v && (tr.lang === "en" || tr.lang === "zh")) v = String(v).replace(/(\d),(\d)/g, "$1.$2");
+    return v ? units(v) : v;
+  }
+  // Unidades con el formato estándar, sin tocar lo que hay guardado:
+  // 50mpx → 50 MP · 45w → 45 W · 120hz → 120 Hz · 5000mAh → 5000 mAh · 16GB → 16 GB
+  // y un resumen de cámaras «200mpx + 50mpx + 10mpx» → «200 + 50 + 10 MP»
+  function units(v) {
+    var n = "(\\d+(?:[.,]\\d+)?)";
+    v = String(v)
+      .replace(new RegExp(n + "\\s*mpx?\\b", "gi"), "$1 MP")
+      .replace(new RegExp(n + "\\s*mah\\b", "gi"), "$1 mAh")
+      .replace(new RegExp(n + "\\s*hz\\b", "gi"), "$1 Hz")
+      .replace(new RegExp(n + "\\s*w\\b", "gi"), "$1 W")
+      .replace(new RegExp(n + "\\s*(gb|tb)\\b", "gi"), function (_, x, u) { return x + " " + u.toUpperCase(); })
+      .replace(/[ \t]{2,}/g, " ");
+    if (/^\s*\d+(?:[.,]\d+)? MP(?:\s*\+\s*\d+(?:[.,]\d+)? MP)+\s*$/.test(v)) {
+      v = v.match(/\d+(?:[.,]\d+)?(?= MP)/g).join(" + ") + " MP";
+    }
     return v;
   }
   function loadTranslations(lang) {
