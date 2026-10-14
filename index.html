@@ -167,7 +167,19 @@
     "No se pudo guardar": ["Couldn't save", "Não foi possível guardar", "無法儲存"],
     "Concepto añadido": ["Concept added", "Conceito adicionado", "已新增術語"],
     "Concepto actualizado": ["Concept updated", "Conceito atualizado", "已更新術語"],
-    "Concepto eliminado": ["Concept deleted", "Conceito eliminado", "已刪除術語"]
+    "Concepto eliminado": ["Concept deleted", "Conceito eliminado", "已刪除術語"],
+    "Cámaras traseras": ["Rear cameras", "Câmaras traseiras", "後置相機"],
+    "Ver sensores": ["See sensors", "Ver sensores", "查看感光元件"],
+    "Cerrar": ["Close", "Fechar", "收合"],
+    "Principal": ["Main", "Principal", "主相機"],
+    "Gran angular": ["Ultra-wide", "Grande angular", "超廣角"],
+    "Teleobjetivo": ["Telephoto", "Teleobjetiva", "望遠"],
+    "Sensor principal": ["Main sensor", "Sensor principal", "主相機感光元件"],
+    "Sensor frontal": ["Front sensor", "Sensor frontal", "前置感光元件"],
+    "Sensor": ["Sensor", "Sensor", "感光元件"],
+    "No tiene": ["None", "Não tem", "無"],
+    "gana {0} de {1}": ["wins {0} of {1}", "ganha {0} de {1}", "{1} 項中勝出 {0} 項"],
+    "* Sensor no confirmado oficialmente por la marca.": ["* Sensor not officially confirmed by the brand.", "* Sensor não confirmado oficialmente pela marca.", "* 品牌未正式公布此感光元件。"]
   };
   var IDX = { en: 0, pt: 1, zh: 2 };
 
@@ -681,6 +693,27 @@
   .spec-table tr.spec-head td { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 0 8px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spec-table td.spec-h-comp { color: var(--ink-faint); }
+  /* Cámaras traseras: fila que se despliega con los sensores */
+  .spec-table .cam-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 2px 0 8px;
+    border: 0; background: none; color: var(--ink-soft); font-family: var(--font); font-size: 11.5px; font-weight: 700;
+    text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .spec-table .cam-chev { display: inline-flex; transition: transform .2s ease; }
+  .spec-table tr.cam-row.open .cam-chev { transform: rotate(180deg); }
+  .spec-table tr.cam-expandable td.spec-competitor, .spec-table tr.cam-expandable td.spec-oppo { cursor: pointer; }
+  .spec-table .cam-sub { display: block; font-size: 10.5px; color: var(--ink-faint); font-weight: 600; margin-top: 2px; }
+  .spec-table tr.cam-detail { display: block; padding: 0 0 10px; }
+  .spec-table tr.cam-detail[hidden] { display: none !important; }
+  .spec-table td.cam-detail-td { background: var(--surface-sunken); border-radius: 12px; padding: 10px 6px; display: flex; flex-direction: column; gap: 10px; }
+  .spec-table .cam-sub-label { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); padding: 0 8px 4px; }
+  .spec-table .cam-sub-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; }
+  .spec-table .lens { display: block; }
+  .spec-table .lens-more { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+  .spec-table .lens-line { display: block; font-weight: 700; }
+  .spec-table .lens-detail { display: block; }
+  .spec-table .lens-name { display: block; font-size: 12.5px; font-weight: 500; }
+  .spec-table .lens-meta { display: block; font-size: 10.5px; color: var(--ink-faint); font-weight: 600; margin-top: 1px; }
+  .spec-table td.spec-win .lens-name { color: var(--ink); }
+  .cam-note { font-size: 11px; color: var(--ink-faint); margin: 6px 8px 0; }
   .spec-table td.spec-h-oppo { color: var(--green-deep); }
 
   .pitch-card {
@@ -1442,9 +1475,21 @@ if ("serviceWorker" in navigator) {
 
   var SPEC_FIELDS = [
     "Pantalla", "Procesador", "RAM", "Almacenamiento",
-    "Batería", "Carga rápida", "Cámara principal", "Cámara frontal",
+    "Batería", "Carga rápida", "Cámara principal",
+    "Sensor principal", "Gran angular", "Teleobjetivo",
+    "Cámara frontal", "Sensor frontal",
     "Resistencia (IP)", "Precio"
   ];
+  // Detalle de cámaras: no tienen fila propia en la comparativa, van dentro de «Cámaras traseras» / «Cámara frontal»
+  var CAM_DETAIL_FIELDS = ["Sensor principal", "Gran angular", "Teleobjetivo", "Sensor frontal"];
+  // «Cámara principal» guarda el resumen de todas las cámaras traseras
+  function fieldLabel(f) { return f === "Cámara principal" ? "Cámaras traseras" : f; }
+  var SPEC_PLACEHOLDERS = {
+    "Sensor principal": "Ej. 50 MP · Sony LYT-828 · 1/1,28\"",
+    "Gran angular": "Ej. 50 MP · Samsung ISOCELL JN5 · 1/2,76\" · 120°",
+    "Teleobjetivo": "Ej. 3x · 50 MP · Sony LYT-600 · 1/1,95\"  (varios: sepáralos con | )",
+    "Sensor frontal": "Ej. 50 MP · Samsung ISOCELL JN5 · 1/2,76\""
+  };
 
   var VARIANT_FIELDS = ["RAM", "Almacenamiento"];
   var VARIANT_OPTIONS = { "RAM": 2, "Almacenamiento": 3 };
@@ -1927,7 +1972,7 @@ if ("serviceWorker" in navigator) {
       var v = oppo.specs && oppo.specs[f];
       if (!v || /^[\s.\-–]*$/.test(v)) return;
       var li = document.createElement("li");
-      li.appendChild(el("b", null, f + ": "));
+      li.appendChild(el("b", null, fieldLabel(f) + ": "));
       li.appendChild(el("span", "no-tr", SV(v)));
       ul.appendChild(li);
     });
@@ -2354,7 +2399,7 @@ if ("serviceWorker" in navigator) {
         var table = document.createElement("table");
         SPEC_FIELDS.forEach(function (field) {
           var tr = document.createElement("tr");
-          tr.appendChild(el("td", "d-label", field));
+          tr.appendChild(el("td", "d-label", fieldLabel(field)));
           tr.appendChild(el("td", "d-val", (model.specs && model.specs[field]) ? SV(model.specs[field]) : "—"));
           table.appendChild(tr);
         });
@@ -2883,6 +2928,162 @@ if ("serviceWorker" in navigator) {
     return n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : Math.round(n / 1000) + " mil";
   }
 
+  // ---------- cámaras: sensores de principal, gran angular y teleobjetivo ----------
+  function camSpec(model, field) {
+    var v = (model && model.specs && model.specs[field]) || "";
+    return /^[\s.\-–—]*$/.test(v) ? "" : String(v).trim();
+  }
+  // «3x · 50 MP · Sony LYT-600* · 1/1,95" · f/2.6» → { zoom, mp, name, size, inv, extra }
+  function parseLenses(text) {
+    return String(text || "").split(/\s*\|\s*|\n/).map(function (part) {
+      part = part.trim(); if (!part) return null;
+      var o = { zoom: "", mp: "", name: "", size: "", inv: null, extra: [] };
+      part.split(/\s*·\s*/).forEach(function (seg) {
+        if (!seg) return;
+        if (/^\d+(?:[.,]\d+)?\s*x$/i.test(seg)) o.zoom = seg.replace(/\s+/g, "");
+        else if (/^\d+(?:[.,]\d+)?\s*mpx?$/i.test(seg)) o.mp = seg.replace(/\s*mpx?$/i, " MP");
+        else if (/^1\s*\/\s*\d+(?:[.,]\d+)?\s*("|”|''|pulg)?/i.test(seg) || /^1\s*("|”|pulgada)/i.test(seg)) {
+          o.size = seg.replace(/\s+/g, "");
+          var m = /^1\/(\d+(?:[.,]\d+)?)/.exec(o.size);
+          o.inv = m ? 1 / parseFloat(m[1].replace(",", ".")) : 1; // tamaño relativo: 1/1,28" → 0,78
+        }
+        else if (!o.name && /[a-z]/i.test(seg) && !/^f\//i.test(seg) && !/°$/.test(seg)) o.name = seg;
+        else o.extra.push(seg);
+      });
+      return o;
+    }).filter(Boolean);
+  }
+  function biggestSensor(text) {
+    var best = null;
+    parseLenses(text).forEach(function (l) { if (l.inv != null && (best == null || l.inv > best)) best = l.inv; });
+    return best;
+  }
+  // Gana el sensor más grande (aunque sea por poco). Si solo uno tiene esa cámara y missingLoses, gana ese.
+  function sensorWinner(c, o, missingLoses) {
+    if (missingLoses) {
+      if (c && !o) return "c";
+      if (o && !c) return "o";
+    }
+    var a = biggestSensor(c), b = biggestSensor(o);
+    if (a == null || b == null || Math.abs(a - b) < 1e-9) return null;
+    return a > b ? "c" : "o";
+  }
+  function setRowWinner(tr, win) {
+    tr.querySelectorAll(".spec-competitor, .spec-oppo").forEach(function (td) {
+      td.classList.remove("spec-win");
+      td.querySelectorAll(".spec-check").forEach(function (k) { k.remove(); });
+    });
+    var wTd = win === "c" ? tr.querySelector(".spec-competitor") : (win === "o" ? tr.querySelector(".spec-oppo") : null);
+    if (!wTd) return;
+    wTd.classList.add("spec-win");
+    var chk = el("span", "spec-check", "✓");
+    var first = wTd.querySelector(".lens-line");
+    var sm = wTd.querySelector(":scope > .spec-antutu, :scope > .cam-sub, :scope > .lens-detail");
+    if (first) first.appendChild(chk);
+    else if (sm) wTd.insertBefore(chk, sm);
+    else wTd.appendChild(chk);
+  }
+  // en inglés y chino, punto decimal (1/1,28" → 1/1.28")
+  function decimals(v) { return (tr.lang === "en" || tr.lang === "zh") ? String(v).replace(/(\d),(\d)/g, "$1.$2") : v; }
+  function appendLensDetail(td, lens, compact) {
+    if (!lens) return;
+    var box = el("span", "lens-detail");
+    if (lens.name) box.appendChild(el("span", "lens-name", lens.name));
+    var meta = [];
+    if (lens.size) meta.push(T("Sensor") + " " + lens.size);
+    lens.extra.forEach(function (x) { meta.push(x); });
+    if (meta.length) box.appendChild(el("span", "lens-meta", decimals(meta.join(" · "))));
+    td.appendChild(box);
+  }
+  function lensCell(cls, text, emptyText) {
+    var td = el("td", cls);
+    var lenses = parseLenses(text);
+    if (!lenses.length) { td.textContent = emptyText; return td; }
+    lenses.forEach(function (l, i) {
+      var wrap = el("span", "lens" + (i ? " lens-more" : ""));
+      var head = [l.zoom, l.mp].filter(Boolean).join(" · ") || l.name || "—";
+      var line = el("span", "lens-line", head);
+      wrap.appendChild(line);
+      var copy = { name: (l.zoom || l.mp) ? l.name : "", size: l.size, extra: l.extra };
+      appendLensDetail(wrap, copy);
+      td.appendChild(wrap);
+    });
+    return td;
+  }
+  var CAM_SUBS = [["Sensor principal", "Principal"], ["Gran angular", "Gran angular"], ["Teleobjetivo", "Teleobjetivo"]];
+  function buildRearCameraRows(table, competitor, oppo) {
+    var field = "Cámara principal";
+    var vC = camSpec(competitor, field), vO = camSpec(oppo, field);
+    var hasDetail = CAM_SUBS.some(function (s) { return camSpec(competitor, s[0]) || camSpec(oppo, s[0]); });
+    if (!vC && !vO && !hasDetail) return;
+    var tr = document.createElement("tr");
+    tr.setAttribute("data-field", field);
+    tr.className = "cam-row";
+    var tdLabel = el("td", "spec-label");
+    var ic = document.createElement("span"); ic.className = "spec-ic"; ic.innerHTML = PITCH_ICONS.camara; tdLabel.appendChild(ic);
+    tdLabel.appendChild(el("span", "cam-title", "Cámaras traseras"));
+    var tdComp = el("td", "spec-competitor", vC ? SV(vC) : "—");
+    var tdOppo = el("td", "spec-oppo", vO ? SV(vO) : "—");
+    tr.appendChild(tdLabel); tr.appendChild(tdComp); tr.appendChild(tdOppo);
+    table.appendChild(tr);
+    if (!hasDetail) { tr.setAttribute("data-sensor-win", ""); return; }
+
+    // detalle desplegable
+    var sub = document.createElement("tr");
+    sub.className = "cam-detail";
+    sub.hidden = true;
+    var subTd = el("td", "cam-detail-td");
+    var wins = { c: 0, o: 0 }, decided = 0;
+    CAM_SUBS.forEach(function (s) {
+      var c = camSpec(competitor, s[0]), o = camSpec(oppo, s[0]);
+      if (!c && !o) return;
+      var block = el("div", "cam-sub-row");
+      block.setAttribute("data-sub", s[0]);
+      block.appendChild(el("div", "cam-sub-label", s[1]));
+      var grid = el("div", "cam-sub-grid");
+      var empty = s[0] === "Sensor principal" ? "—" : T("No tiene");
+      var a = lensCell("spec-competitor", c, empty), b = lensCell("spec-oppo", o, empty);
+      grid.appendChild(a); grid.appendChild(b);
+      block.appendChild(grid);
+      var w = sensorWinner(c, o, s[0] !== "Sensor principal");
+      setRowWinner(grid, w);
+      if (w) { wins[w]++; decided++; }
+      subTd.appendChild(block);
+    });
+    sub.appendChild(subTd);
+    table.appendChild(sub);
+
+    // resumen en la fila cerrada: quién gana más cámaras
+    var tally = wins.c > wins.o ? "c" : (wins.o > wins.c ? "o" : null);
+    if (decided) {
+      tdComp.appendChild(el("small", "cam-sub", T("gana " + wins.c + " de " + decided)));
+      tdOppo.appendChild(el("small", "cam-sub", T("gana " + wins.o + " de " + decided)));
+    }
+    tr.setAttribute("data-sensor-win", tally || "");
+    setRowWinner(tr, tally);
+
+    var btn = el("button", "cam-toggle");
+    btn.type = "button";
+    btn.setAttribute("aria-expanded", "false");
+    var hint = el("span", "cam-toggle-hint", "Ver sensores");
+    btn.appendChild(hint);
+    var chev = document.createElement("span"); chev.className = "cam-chev";
+    chev.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+    btn.appendChild(chev);
+    tdLabel.appendChild(btn);
+    tr.classList.add("cam-expandable");
+    function toggle() {
+      var open = sub.hidden;
+      sub.hidden = !open;
+      tr.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", String(open));
+      hint.textContent = open ? "Cerrar" : "Ver sensores";
+    }
+    btn.addEventListener("click", function (e) { e.stopPropagation(); toggle(); });
+    tdComp.addEventListener("click", toggle);
+    tdOppo.addEventListener("click", toggle);
+  }
+
   // ---------- comparison result ----------
   function showComparison(sinDesplazar) {
     var competitor = findModel(state.selectedCompetitorModelId);
@@ -2917,6 +3118,8 @@ if ("serviceWorker" in navigator) {
     head.appendChild(el("td", "spec-h-oppo", oppo.name));
     table.appendChild(head);
     SPEC_FIELDS.forEach(function (field) {
+      if (CAM_DETAIL_FIELDS.indexOf(field) !== -1) return;
+      if (field === "Cámara principal") { buildRearCameraRows(table, competitor, oppo); return; }
       var tr = document.createElement("tr");
       tr.setAttribute("data-field", field);
       var vC = (competitor.specs && competitor.specs[field]) || "", vO = (oppo.specs && oppo.specs[field]) || "";
@@ -2937,15 +3140,26 @@ if ("serviceWorker" in navigator) {
         });
       }
       var win = specWinner(field, vC, vO);
-      var wTd = win === "c" ? tdComp : (win === "o" ? tdOppo : null);
-      if (wTd) {
-        wTd.classList.add("spec-win");
-        var chk = el("span", "spec-check", "✓"), sm = wTd.querySelector(".spec-antutu");
-        if (sm) wTd.insertBefore(chk, sm); else wTd.appendChild(chk);
+      if (field === "Cámara frontal") {
+        // sensor de la frontal debajo del valor; si los dos tienen tamaño de sensor, gana el más grande
+        var sC = camSpec(competitor, "Sensor frontal"), sO = camSpec(oppo, "Sensor frontal");
+        if (sC) appendLensDetail(tdComp, parseLenses(sC)[0], true);
+        if (sO) appendLensDetail(tdOppo, parseLenses(sO)[0], true);
+        win = sensorWinner(sC, sO, false);
       }
+      tr.setAttribute("data-sensor-win", win || "");
       tr.appendChild(tdLabel); tr.appendChild(tdComp); tr.appendChild(tdOppo);
+      setRowWinner(tr, win);
       table.appendChild(tr);
     });
+    // nota si algún sensor no está confirmado por la marca
+    var anyStar = CAM_DETAIL_FIELDS.some(function (f) { return /\*/.test(camSpec(competitor, f) + camSpec(oppo, f)); });
+    var oldNote = $("cam-note"); if (oldNote) oldNote.remove();
+    if (anyStar) {
+      var note = el("p", "cam-note", "* Sensor no confirmado oficialmente por la marca.");
+      note.id = "cam-note";
+      table.insertAdjacentElement("afterend", note);
+    }
 
     $("comparison-result").hidden = false;
     if (sinDesplazar && state.currentComparisonId === pairId(competitor.id, oppo.id) && state.unsub.comparison) {
@@ -2998,12 +3212,10 @@ if ("serviceWorker" in navigator) {
       var row = document.querySelector('#spec-table tr[data-field="' + field + '"]');
       if (!row) return;
       var td = row.querySelector(".spec-oppo");
-      row.querySelectorAll(".spec-pitch-win").forEach(function (c) { c.classList.remove("spec-win", "spec-pitch-win"); var k = c.querySelector(".spec-check"); if (k) k.remove(); });
-      if (!td || td.textContent.trim() === "—") return;
+      var sensorWin = row.getAttribute("data-sensor-win") || null;
       var wins = lines.some(function (l) { return CAMERA_PITCH_RULES[field].test(l); });
-      if (!wins) return;
-      td.classList.add("spec-win", "spec-pitch-win");
-      td.appendChild(el("span", "spec-check", "✓"));
+      var hasValue = td && td.firstChild && String(td.firstChild.textContent || "").trim() !== "—";
+      setRowWinner(row, wins && hasValue ? "o" : sensorWin);
     });
   }
 
@@ -3417,7 +3629,7 @@ if ("serviceWorker" in navigator) {
     SPEC_FIELDS.forEach(function (field) {
       var isVariant = VARIANT_FIELDS.indexOf(field) !== -1;
       var f = el("div", "spec-field" + (isVariant ? " spec-field-variant" : ""));
-      var label = el("label", null, field);
+      var label = el("label", null, field === "Cámara principal" ? "Cámaras traseras (resumen, ej. 50mpx + 8mpx + 2mpx)" : field);
       f.appendChild(label);
       if (isVariant) {
         var existing = (model && model.specs && model.specs[field]) ? model.specs[field] : "";
@@ -3446,6 +3658,7 @@ if ("serviceWorker" in navigator) {
       } else {
         var input = document.createElement("input");
         input.value = (model && model.specs && model.specs[field]) ? model.specs[field] : "";
+        if (SPEC_PLACEHOLDERS[field]) input.placeholder = SPEC_PLACEHOLDERS[field];
         var dlId = "dl-" + field.replace(/[^a-zA-Z0-9]/g, "") + "-" + (datalistSeq++);
         var dl = document.createElement("datalist");
         dl.id = dlId;
