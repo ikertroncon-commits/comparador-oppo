@@ -694,9 +694,12 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spec-table td.spec-h-comp { color: var(--ink-faint); }
   /* Cámaras traseras: fila que se despliega con los sensores */
-  .spec-table .cam-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 2px 0 8px;
-    border: 0; background: none; color: var(--ink-soft); font-family: var(--font); font-size: 11.5px; font-weight: 700;
-    text-transform: none; letter-spacing: 0; cursor: pointer; }
+  /* «Ver sensores»: botón llamativo con el degradado de la app (rosa-morado en oscuro, verde en claro) */
+  .spec-table .cam-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 10px 0 13px;
+    border: 0; border-radius: 999px; background: var(--gradient); color: #fff; box-shadow: 0 3px 12px var(--glow);
+    font-family: var(--font); font-size: 12px; font-weight: 800; text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .spec-table .cam-toggle:active { transform: scale(0.96); }
+  .spec-table tr.cam-row.open .cam-toggle { background: var(--surface-sunken); color: var(--ink); box-shadow: none; }
   .spec-table .cam-chev { display: inline-flex; transition: transform .2s ease; }
   .spec-table tr.cam-row.open .cam-chev { transform: rotate(180deg); }
   .spec-table tr.cam-expandable td.spec-competitor, .spec-table tr.cam-expandable td.spec-oppo { cursor: pointer; }
