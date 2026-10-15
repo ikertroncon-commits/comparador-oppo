@@ -110,6 +110,9 @@
     "RAM": ["RAM", "RAM", "RAM"],
     "Almacenamiento": ["Storage", "Armazenamento", "儲存空間"],
     "Batería": ["Battery", "Bateria", "電池"],
+    "Ciclos de batería": ["Battery cycles", "Ciclos da bateria", "電池充電循環"],
+    "{0} ciclos de carga": ["{0} charge cycles", "{0} ciclos de carga", "{0} 次充電循環"],
+    "Según la etiqueta energética de la UE": ["According to the EU energy label", "Segundo a etiqueta energética da UE", "依據歐盟能源標籤"],
     "Carga rápida": ["Fast charging", "Carregamento rápido", "快速充電"],
     "Cámara principal": ["Main camera", "Câmara principal", "主相機"],
     "Cámara frontal": ["Front camera", "Câmara frontal", "前置相機"],
@@ -1478,7 +1481,7 @@ if ("serviceWorker" in navigator) {
 
   var SPEC_FIELDS = [
     "Pantalla", "Procesador", "RAM", "Almacenamiento",
-    "Batería", "Carga rápida", "Cámara principal",
+    "Batería", "Ciclos de batería", "Carga rápida", "Cámara principal",
     "Sensor principal", "Gran angular", "Teleobjetivo",
     "Cámara frontal", "Sensor frontal",
     "Resistencia (IP)", "Precio"
@@ -1487,7 +1490,10 @@ if ("serviceWorker" in navigator) {
   var CAM_DETAIL_FIELDS = ["Sensor principal", "Gran angular", "Teleobjetivo", "Sensor frontal"];
   // «Cámara principal» guarda el resumen de todas las cámaras traseras
   function fieldLabel(f) { return f === "Cámara principal" ? "Cámaras traseras" : f; }
+  // Ciclos de carga de la etiqueta energética UE: van debajo de la batería, sin fila propia
+  var SUB_FIELDS = ["Ciclos de batería"];
   var SPEC_PLACEHOLDERS = {
+    "Ciclos de batería": "Ej. 1200 (etiqueta energética UE; vacío si no tiene)",
     "Sensor principal": "Ej. 50 MP · Sony LYT-828 · 1/1,28\"",
     "Gran angular": "Ej. 50 MP · Samsung ISOCELL JN5 · 1/2,76\" · 120°",
     "Teleobjetivo": "Ej. 3x · 50 MP · Sony LYT-600 · 1/1,95\"  (varios: sepáralos con | )",
@@ -3138,7 +3144,7 @@ if ("serviceWorker" in navigator) {
     head.appendChild(el("td", "spec-h-oppo", oppo.name));
     table.appendChild(head);
     SPEC_FIELDS.forEach(function (field) {
-      if (CAM_DETAIL_FIELDS.indexOf(field) !== -1) return;
+      if (CAM_DETAIL_FIELDS.indexOf(field) !== -1 || SUB_FIELDS.indexOf(field) !== -1) return;
       if (field === "Cámara principal") { buildRearCameraRows(table, competitor, oppo); return; }
       var tr = document.createElement("tr");
       tr.setAttribute("data-field", field);
@@ -3157,6 +3163,17 @@ if ("serviceWorker" in navigator) {
         [[tdComp, vC], [tdOppo, vO]].forEach(function (pair) {
           var sc = antutuOf(pair[1]);
           if (sc) pair[0].appendChild(el("small", "spec-antutu", "AnTuTu ≈ " + fmtAntutu(sc)));
+        });
+      }
+      if (field === "Batería") {
+        // ciclos de carga según la etiqueta energética UE
+        [[tdComp, competitor], [tdOppo, oppo]].forEach(function (pair) {
+          var cy = String((pair[1].specs && pair[1].specs["Ciclos de batería"]) || "").replace(/[^\d]/g, "");
+          if (cy) {
+            var sm = el("small", "spec-antutu spec-cycles", T("{0} ciclos de carga".replace("{0}", cy)));
+            sm.title = T("Según la etiqueta energética de la UE");
+            pair[0].appendChild(sm);
+          }
         });
       }
       var win = specWinner(field, vC, vO);
