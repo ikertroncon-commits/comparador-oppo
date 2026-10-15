@@ -1,8 +1,8 @@
 // Service worker del Comparador OPPO.
 // Los datos siempre vienen en vivo de Firebase; aqui solo se guardan la app y las fotos
 // para que abra rapido y muestre algo aunque falle la conexion un momento.
-const CACHE = "comparador-v37";
-const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "comparador-v38";
+const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./dxomark.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -110,6 +110,8 @@
     "RAM": ["RAM", "RAM", "RAM"],
     "Almacenamiento": ["Storage", "Armazenamento", "儲存空間"],
     "Batería": ["Battery", "Bateria", "電池"],
+    "Ranking DXOMARK": ["DXOMARK ranking", "Ranking DXOMARK", "DXOMARK 排名"],
+    "Puesto {0} en el ranking de cámara de DXOMARK": ["No. {0} in the DXOMARK camera ranking", "N.º {0} no ranking de câmara da DXOMARK", "DXOMARK 相機排名第 {0} 名"],
     "Ciclos de batería": ["Battery cycles", "Ciclos da bateria", "電池充電循環"],
     "Batería más duradera: {0} ciclos de carga frente a {1} (etiqueta energética UE)": ["Longer-lasting battery: {0} charge cycles vs {1} (EU energy label)", "Bateria mais duradoura: {0} ciclos de carga contra {1} (etiqueta energética UE)", "電池更耐用：{0} 次充電循環，對手為 {1} 次（歐盟能源標籤）"],
     "{0} ciclos de carga": ["{0} charge cycles", "{0} ciclos de carga", "{0} 次充電循環"],
@@ -837,11 +839,23 @@
   .image-upload-controls .upload-status { font-size: 11px; color: var(--ink-faint); }
 
   .vs-photos { display: flex; gap: 10px; margin-top: 16px; }
+  .vs-photo { position: relative; flex: 1; width: 50%; min-width: 0; display: flex; }
+  .dxo-badge {
+    position: absolute; top: 7px; right: 7px; width: 46px; padding: 4px; box-sizing: border-box;
+    border-radius: 10px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.22); line-height: 0;
+  }
+  .vs-photos .dxo-badge img { display: block; width: 100%; height: auto; padding: 0; border: 0; border-radius: 0; background: none; aspect-ratio: auto; flex: none; }
+  .dxo-badge .dxo-n {
+    position: absolute; left: calc(4px + 38px * .503); top: calc(4px + 38px * 1.0375 * .418); transform: translate(-50%, -50%);
+    font-size: 11px; font-weight: 800; color: #14141F; line-height: 1; letter-spacing: -.02em;
+  }
+  .dxo-badge .dxo-n3 { font-size: 9px; }
   .vs-photos img {
     flex: 1; width: 50%; aspect-ratio: 1 / 1; object-fit: contain;
     border-radius: 14px; border: 1px solid var(--border); background: var(--surface-sunken);
     padding: 10px;
   }
+  .vs-photos .vs-photo > img { width: 100%; }
 
   .empty-state { text-align: center; padding: 50px 20px; color: var(--ink-faint); }
   .empty-state .big { font-size: 32px; margin-bottom: 10px; }
@@ -1485,15 +1499,16 @@ if ("serviceWorker" in navigator) {
     "Batería", "Ciclos de batería", "Carga rápida", "Cámara principal",
     "Sensor principal", "Gran angular", "Teleobjetivo",
     "Cámara frontal", "Sensor frontal",
-    "Resistencia (IP)", "Precio"
+    "Resistencia (IP)", "Precio", "Ranking DXOMARK"
   ];
   // Detalle de cámaras: no tienen fila propia en la comparativa, van dentro de «Cámaras traseras» / «Cámara frontal»
   var CAM_DETAIL_FIELDS = ["Sensor principal", "Gran angular", "Teleobjetivo", "Sensor frontal"];
   // «Cámara principal» guarda el resumen de todas las cámaras traseras
   function fieldLabel(f) { return f === "Cámara principal" ? "Cámaras traseras" : f; }
   // Ciclos de carga de la etiqueta energética UE: van debajo de la batería, sin fila propia
-  var SUB_FIELDS = ["Ciclos de batería"];
+  var SUB_FIELDS = ["Ciclos de batería", "Ranking DXOMARK"];
   var SPEC_PLACEHOLDERS = {
+    "Ranking DXOMARK": "Puesto en el ranking de cámara de DXOMARK, ej. 5 (vacío si no está)",
     "Ciclos de batería": "Ej. 1200 (etiqueta energética UE; vacío si no tiene)",
     "Sensor principal": "Ej. 50 MP · Sony LYT-828 · 1/1,28\"",
     "Gran angular": "Ej. 50 MP · Samsung ISOCELL JN5 · 1/2,76\" · 120°",
@@ -3133,8 +3148,21 @@ if ("serviceWorker" in navigator) {
       oppoImg.src = oppo.imageId ? blobSrc(oppo.imageId) : "";
       oppoImg.alt = oppo.name;
       if (!oppo.imageId) oppoImg.style.visibility = "hidden";
-      photos.appendChild(compImg);
-      photos.appendChild(oppoImg);
+      [[compImg, competitor], [oppoImg, oppo]].forEach(function (pair) {
+        var wrap = el("div", "vs-photo");
+        wrap.appendChild(pair[0]);
+        // puesto en el ranking de cámara de DXOMARK, sobre la foto
+        var rk = String((pair[1].specs && pair[1].specs["Ranking DXOMARK"]) || "").replace(/[^\d]/g, "");
+        if (rk && pair[1].imageId) {
+          var b = el("span", "dxo-badge");
+          b.title = T("Puesto {0} en el ranking de cámara de DXOMARK".replace("{0}", rk));
+          var logo = document.createElement("img"); logo.src = "dxomark.png"; logo.alt = "DXOMARK";
+          b.appendChild(logo);
+          b.appendChild(el("span", "dxo-n" + (rk.length > 2 ? " dxo-n3" : ""), rk));
+          wrap.appendChild(b);
+        }
+        photos.appendChild(wrap);
+      });
       $("res-oppo-name").closest(".vs-header").insertAdjacentElement("afterend", photos);
     }
 
