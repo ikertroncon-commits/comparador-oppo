@@ -111,6 +111,7 @@
     "Almacenamiento": ["Storage", "Armazenamento", "儲存空間"],
     "Batería": ["Battery", "Bateria", "電池"],
     "Ciclos de batería": ["Battery cycles", "Ciclos da bateria", "電池充電循環"],
+    "Batería más duradera: {0} ciclos de carga frente a {1} (etiqueta energética UE)": ["Longer-lasting battery: {0} charge cycles vs {1} (EU energy label)", "Bateria mais duradoura: {0} ciclos de carga contra {1} (etiqueta energética UE)", "電池更耐用：{0} 次充電循環，對手為 {1} 次（歐盟能源標籤）"],
     "{0} ciclos de carga": ["{0} charge cycles", "{0} ciclos de carga", "{0} 次充電循環"],
     "Según la etiqueta energética de la UE": ["According to the EU energy label", "Segundo a etiqueta energética da UE", "依據歐盟能源標籤"],
     "Carga rápida": ["Fast charging", "Carregamento rápido", "快速充電"],
@@ -3232,7 +3233,30 @@ if ("serviceWorker" in navigator) {
           : "Todavía no hay un argumento de venta para esta comparación.";
         textEl.classList.add("empty");
       }
+      appendCyclesArgument(textEl, data && data.comments);
       markCamerasFromPitch(data && data.comments);
+  }
+  // Si el OPPO tiene más ciclos de carga (etiqueta energética UE) que el rival, se añade como argumento
+  function cyclesOf(m) {
+    var v = String((m && m.specs && m.specs["Ciclos de batería"]) || "").replace(/[^\d]/g, "");
+    return v ? parseInt(v, 10) : null;
+  }
+  function appendCyclesArgument(textEl, comments) {
+    var cO = cyclesOf(findModel(state.selectedOppoModelId)), cC = cyclesOf(findModel(state.selectedCompetitorModelId));
+    if (cO == null || cC == null || cO <= cC) return;
+    if (/ciclos? de carga/i.test(comments || "")) return; // ya lo menciona el argumento escrito
+    if (textEl.classList.contains("empty")) { textEl.textContent = ""; textEl.classList.remove("empty"); }
+    if (!textEl.classList.contains("pitch-list")) {
+      // argumento en texto libre: se pasa a lista para poder añadir la línea con su icono
+      var prev = textEl.textContent.trim();
+      textEl.textContent = "";
+      textEl.classList.add("pitch-list");
+      if (prev) { var intro = el("span", "pitch-intro"); intro.appendChild(el("span", "pitch-tx", prev)); textEl.appendChild(intro); }
+    }
+    var row = el("span", "pitch-item pitch-auto");
+    var ic = el("span", "pitch-ic pi-bateria"); ic.innerHTML = PITCH_ICONS.bateria; row.appendChild(ic);
+    row.appendChild(el("span", "pitch-tx", T("Batería más duradera: {0} ciclos de carga frente a {1} (etiqueta energética UE)".replace("{0}", cO).replace("{1}", cC))));
+    textEl.appendChild(row);
   }
 
   // Cámaras: no se comparan por megapíxeles, sino por lo que dice el argumento de venta.
