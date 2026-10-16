@@ -1708,6 +1708,7 @@ if ("serviceWorker" in navigator) {
     subscribeInterests();
     subscribeAccessories();
     subscribeConcepts();
+    setupCatalogPublisher();
     setupConcepts();
     renderInterestButtons();
     renderAccessoryCategoryButtons();
@@ -1743,9 +1744,109 @@ if ("serviceWorker" in navigator) {
     es.querySelector("p strong") && (es.querySelector("p strong").textContent = msg);
   }
 
+  // ---------- catálogo publicado en un solo documento ----------
+  // Los vendedores leen todo el catálogo de una vez (catalogo/actual) en lugar de ficha a ficha:
+  // pasan de ~110 lecturas por apertura a ~5. El administrador sigue leyendo cada colección en vivo
+  // y su app mantiene el catálogo al día cada vez que algo cambia (también si se edita desde la consola).
+  var CATALOG_COLS = ["brands", "models", "interests", "accessories", "concepts", "comparisons"];
+  var catalog = { data: null, handlers: {}, fallback: false, started: false, onComparisons: null };
+  var pub = { cols: {}, remote: undefined, timer: null, busy: false };
+  function fakeSnap(map) {
+    return { docs: Object.keys(map || {}).map(function (id) {
+      var v = map[id];
+      return { id: id, data: function () { return JSON.parse(JSON.stringify(v)); } };
+    }) };
+  }
+  function watchCollection(name, onSnap, onErr) {
+    if (state.canEdit) {
+      return state.db.collection(name).onSnapshot(function (snap) { recordForCatalog(name, snap); onSnap(snap); }, onErr);
+    }
+    catalog.handlers[name] = { onSnap: onSnap, onErr: onErr };
+    if (catalog.fallback) return state.db.collection(name).onSnapshot(onSnap, onErr);
+    if (catalog.data) setTimeout(function () { onSnap(fakeSnap(catalog.data[name])); }, 0);
+    startCatalog();
+    return function () {};
+  }
+  function startCatalog() {
+    if (catalog.started) return;
+    catalog.started = true;
+    catalog.unsub = state.db.collection("catalogo").doc("actual").onSnapshot(function (snap) {
+      if (catalog.fallback) return;
+      var d = snap && snap.exists ? snap.data() : null, parsed = null;
+      try { parsed = d && d.json ? JSON.parse(d.json) : null; } catch (e) { parsed = null; }
+      if (!parsed) { catalogFallback(); return; }
+      catalog.data = parsed;
+      Object.keys(catalog.handlers).forEach(function (n) { catalog.handlers[n].onSnap(fakeSnap(parsed[n])); });
+      if (catalog.onComparisons) catalog.onComparisons();
+    }, function (err) { console.warn("catalogo", err); catalogFallback(); });
+  }
+  // Si aún no hay catálogo publicado (o no se puede leer), se lee colección a colección como antes
+  function catalogFallback() {
+    if (catalog.fallback) return;
+    catalog.fallback = true;
+    if (catalog.unsub) { try { catalog.unsub(); } catch (e) {} }
+    Object.keys(catalog.handlers).forEach(function (n) {
+      var h = catalog.handlers[n];
+      state.db.collection(n).onSnapshot(h.onSnap, h.onErr);
+    });
+    if (catalog.onComparisons) catalog.onComparisons();
+  }
+  // ---- administrador: mantener el catálogo al día ----
+  function recordForCatalog(name, snap) {
+    var m = {};
+    snap.docs.forEach(function (d) { m[d.id] = d.data(); });
+    pub.cols[name] = m;
+    schedulePublish();
+  }
+  function stableJson(v) {
+    if (Array.isArray(v)) return "[" + v.map(stableJson).join(",") + "]";
+    if (v && typeof v === "object") {
+      return "{" + Object.keys(v).sort().filter(function (k) { return v[k] !== undefined; })
+        .map(function (k) { return JSON.stringify(k) + ":" + stableJson(v[k]); }).join(",") + "}";
+    }
+    return JSON.stringify(v === undefined ? null : v);
+  }
+  function setupCatalogPublisher() {
+    if (!state.canEdit) return;
+    state.db.collection("catalogo").doc("actual").get().then(function (s) {
+      var d = s && s.exists ? s.data() : null;
+      pub.remote = (d && d.json) || "";
+      schedulePublish();
+    }).catch(function (e) { console.warn("catalogo", e); pub.remote = ""; schedulePublish(); });
+    // los argumentos de las comparativas también van en el catálogo
+    state.db.collection("comparisons").onSnapshot(function (snap) { recordForCatalog("comparisons", snap); },
+      function (e) { console.warn("comparisons", e); });
+  }
+  function schedulePublish() {
+    if (!state.canEdit || pub.remote === undefined) return;
+    if (!CATALOG_COLS.every(function (n) { return pub.cols[n]; })) return;
+    clearTimeout(pub.timer);
+    // se espera unos segundos para juntar varios cambios seguidos en una sola publicación
+    pub.timer = setTimeout(publishCatalog, 4000);
+  }
+  // si el administrador sale de la app con cambios pendientes, se publican en ese momento
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden" && pub.timer && state.canEdit) { clearTimeout(pub.timer); pub.timer = null; publishCatalog(); }
+  });
+  function publishCatalog() {
+    if (pub.busy) { schedulePublish(); return; }
+    var body = {};
+    CATALOG_COLS.forEach(function (n) { body[n] = pub.cols[n]; });
+    var json = stableJson(body);
+    // demasiado grande para un documento: se deja vacío y los vendedores leen colección a colección
+    if (json.length > 900000) { console.warn("catálogo demasiado grande", json.length); json = ""; }
+    pub.timer = null;
+    if (json === pub.remote) return;
+    pub.busy = true;
+    state.db.collection("catalogo").doc("actual").set({ json: json, actualizado: Date.now() })
+      .then(function () { pub.remote = json; })
+      .catch(function (e) { console.warn("No se pudo publicar el catálogo", e); })
+      .then(function () { pub.busy = false; });
+  }
+
   // ---------- subscriptions ----------
   function subscribeBrands() {
-    state.unsub.brands = state.db.collection("brands").onSnapshot(function (snap) {
+    state.unsub.brands = watchCollection("brands", function (snap) {
       state.brands = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       maybeSeed();
       renderBrandChips();
@@ -1761,7 +1862,7 @@ if ("serviceWorker" in navigator) {
   }
 
   function subscribeModels() {
-    state.unsub.models = state.db.collection("models").onSnapshot(function (snap) {
+    state.unsub.models = watchCollection("models", function (snap) {
       state.models = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       try { if (window.AndroidApp && window.AndroidApp.setWidgetData) window.AndroidApp.setWidgetData(JSON.stringify({ modelos: state.models.length })); } catch (e) {}
       setTimeout(tryDeepLink, 0);
@@ -1776,7 +1877,7 @@ if ("serviceWorker" in navigator) {
   }
 
   function subscribeInterests() {
-    state.db.collection("interests").onSnapshot(function (snap) {
+    watchCollection("interests", function (snap) {
       var map = {};
       snap.docs.forEach(function (d) { map[d.id] = d.data(); });
       state.interests = map;
@@ -1789,7 +1890,7 @@ if ("serviceWorker" in navigator) {
   }
 
   function subscribeAccessories() {
-    state.db.collection("accessories").onSnapshot(function (snap) {
+    watchCollection("accessories", function (snap) {
       state.accessories = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       renderAccessoryResult();
       renderAdminAccessoryList();
@@ -2160,7 +2261,7 @@ if ("serviceWorker" in navigator) {
     if (last < text.length) div.appendChild(document.createTextNode(text.slice(last)));
   }
   function subscribeConcepts() {
-    state.db.collection("concepts").onSnapshot(function (snap) {
+    watchCollection("concepts", function (snap) {
       state.concepts = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       renderConcepts();
     }, function (err) { console.error("concepts error", err); });
@@ -3244,6 +3345,23 @@ if ("serviceWorker" in navigator) {
     editBtn.hidden = !state.canEdit;
     hidePitchEditor();
 
+    if (!state.canEdit && !catalog.fallback) {
+      // vendedor: el argumento viene del catálogo, sin lecturas extra
+      catalog.onComparisons = function () {
+        if (state.currentComparisonId !== id) return;
+        if (catalog.fallback) { catalog.onComparisons = null; listenComparison(id); return; }
+        if (!catalog.data) return;
+        state.currentComparisonData = (catalog.data.comparisons && catalog.data.comparisons[id]) || null;
+        paintComparisonPitch();
+      };
+      state.unsub.comparison = function () { catalog.onComparisons = null; };
+      startCatalog();
+      if (catalog.data) catalog.onComparisons();
+      return;
+    }
+    listenComparison(id);
+  }
+  function listenComparison(id) {
     state.unsub.comparison = state.db.collection("comparisons").doc(id).onSnapshot(function (snap) {
       state.currentComparisonData = snap.exists ? snap.data() : null;
       paintComparisonPitch();
