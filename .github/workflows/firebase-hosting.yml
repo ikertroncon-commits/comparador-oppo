@@ -1,0 +1,40 @@
+name: Web en Firebase Hosting
+
+# Publica la web en Firebase Hosting (proyecto versus-oppo) cada vez que cambia algo en main.
+# Necesita el secreto FIREBASE_SERVICE_ACCOUNT (clave JSON de una cuenta de servicio con permiso de Hosting).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['android/**', '.github/workflows/android.yml', 'README.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar los archivos de la web
+        run: |
+          mkdir -p public
+          cp index.html sw.js manifest.json ./*.png public/
+          cp -r img .well-known public/
+
+      - name: Comprobar el secreto
+        id: secreto
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -n "$SA" ]; then echo "hay=si" >> "$GITHUB_OUTPUT"; else echo "Falta el secreto FIREBASE_SERVICE_ACCOUNT: no se publica."; fi
+
+      - name: Publicar en Firebase Hosting
+        if: steps.secreto.outputs.hay == 'si'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: versus-oppo
+          channelId: live
