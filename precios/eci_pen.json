@@ -1,0 +1,272 @@
+{
+ "canal": "eci_pen",
+ "nombre": "El Corte Inglés Península",
+ "fuente": "comprasmartphone.com",
+ "actualizado": "2026-10-17T10:02+01:00",
+ "modelos": {
+  "mjbh3sipzcnoxtqwfin5": {
+   "precio": "379,90 €",
+   "detalle": {
+    "256GB": 379.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202058708-6936520891986-pr-movil-honor-600-lite-66-dimensity-7100-elite-verde-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.853Z"
+  },
+  "hejrj215wnk5vafpqzpy": {
+   "precio": "329 €",
+   "detalle": {
+    "256GB": 329.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A56886425-8806097651178-pr-movil-samsung-galaxy-a17-67-mediatek-helio-g99-negro-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.568Z"
+  },
+  "3q8jlsn0lquzd7uomhlw": {
+   "precio": "319,90 €",
+   "detalle": {
+    "256GB": 319.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A56390869-8806097640233-pr-movil-samsung-galaxy-a17-5g-67-exynos-1330-azul-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:40.841Z"
+  },
+  "0oh7a8gxzx8kqb6kx462": {
+   "precio": "299,90 €",
+   "detalle": {
+    "128GB": 299.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047804-8806099353476-pr-movil-samsung-galaxy-a27-67-qualcomm-snapdragon-6-gen3-negro-128-gb-6-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:41.035Z"
+  },
+  "vhnqr3mshm67cwoqwk4f": {
+   "precio": "479,90 €",
+   "detalle": {
+    "256GB": 479.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A201414296-8806099035303-pr-movil-samsung-galaxy-a37-69-exynos-1480-lavanda-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.806Z"
+  },
+  "1dhz59obuitjw2tvodjd": {
+   "precio": "529,90 €",
+   "detalle": {
+    "256GB": 529.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047806-8806099028121-pr-movil-samsung-galaxy-a57-67-exynos-1680-gris-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.794Z"
+  },
+  "5dli40eqxfur7aqpa5hl": {
+   "precio": "429,90 €",
+   "detalle": {
+    "256GB": 429.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A200972248-0840493621722-pr-movil-motorola-edge-70-fusion-power-678-qualcomm-snapdragon-7s-gen-3-sporting-green-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.863Z"
+  },
+  "ssb6qhid8muyjgua3xn9": {
+   "precio": "139 €",
+   "detalle": {
+    "256GB": 139.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047819-0840493605272-pr-movil-motorola-moto-g06-power-688-mediatek-helio-g81-extreme-pantone-laurel-oak-256-gb-4-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:40.777Z"
+  },
+  "j8f8rg7sxb9iycbtuhzy": {
+   "precio": "269,90 €",
+   "detalle": {
+    "256GB": 269.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A200473851-0840493617213-pr-movil-motorola-moto-g77-5g-678-mediatek-dimensity-6400-pantone-shaded-spruce-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:40.999Z"
+  },
+  "2o0z8c0epcku55n2r2bd": {
+   "precio": "299 €",
+   "detalle": {
+    "256GB": 299.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202058692-8435280955931-pr-movil-oppo-a6-pro-5g-657-dimensity-6300-funda-stellar-black-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.718Z"
+  },
+  "3utfe7l551mmm66ojkkn": {
+   "precio": "899,90 €",
+   "detalle": {
+    "512GB": 899.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202058695-6932169385152-pr-movil-oppo-find-x9-659-dimensity-9500-negro-espacial-512-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.676Z"
+  },
+  "bxt6zxd5nzms782inr8a": {
+   "precio": "1699 €",
+   "detalle": {
+    "512GB": 1699.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202058694-6942675405305-pr-movil-oppo-find-x9-ultra-685-snapdragon-8-gen5-canyon-orange-512-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.835Z"
+  },
+  "vspza036foosmiv752nk": {
+   "precio": "1099,90 €",
+   "detalle": {
+    "256GB": 1099.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A201935281-0840353957121-pr-movil-google-pixel-11-pro-63-google-tensor-g6-arenisca-256-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.926Z"
+  },
+  "6c3gevhh0qtq306ojeqx": {
+   "precio": "1429,90 €",
+   "detalle": {
+    "512GB": 1429.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A201937657-0840353958401-pr-movil-google-pixel-11-pro-xl-68-google-tensor-g6-arenisca-512-gb-16-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:41.111Z"
+  },
+  "3itb2uulirex5wycjhpo": {
+   "precio": "199,90 €",
+   "detalle": {
+    "256GB": 199.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A201992692-6939093017876-pr-movil-xiaomi-redmi-17-69-mediatek-helio-g91-ultra-deep-blue-256-gb-4-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.596Z"
+  },
+  "t9v42sahx85o7c5lq9uz": {
+   "precio": "259,90 €",
+   "detalle": {
+    "256GB": 259.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A201992972-6939093008522-pr-movil-xiaomi-redmi-17-5g-69-snapdragon-4-gen-5-naranja-256-gb-4-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:41.121Z"
+  },
+  "7y1vl7z42vd08ev7pw70": {
+   "precio": "299 €",
+   "detalle": {
+    "256GB": 299.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202002464-6932554425630-pr-movil-xiaomi-redmi-note-17-699-snapdragon-6s-gen-2-sky-teal-256-gb-6-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.595Z"
+  },
+  "xctx6r20uob1q1sj9j2w": {
+   "precio": "379 €",
+   "detalle": {
+    "256GB": 379.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202002414-6939093021439-pr-movil-xiaomi-redmi-note-17-5g-699-snapdragon-4-gen-4-celestial-purple-256-gb-6-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:44.007Z"
+  },
+  "4zbouqclfh7tquex28aq": {
+   "precio": "479 €",
+   "detalle": {
+    "256GB": 479.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202084466-6939093005774-pr-movil-xiaomi-redmi-note-17-pro-5g-683-snapdragon-6s-gen-4-azul-cielo-256-gb-6-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T05:55:41.190Z"
+  },
+  "fsmdp89i2twv9b8pwyng": {
+   "precio": "599 € – 649 €",
+   "detalle": {
+    "256GB": 599.0,
+    "512GB": 649.0
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202084470-6939093005057-pr-movil-xiaomi-redmi-note-17-pro-max-5g-683-snapdragon-6-gen-5-negro-256-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:44.004Z"
+  },
+  "4d3mzngwmjpyrleg0zym": {
+   "precio": "949,90 € – 1059,90 €",
+   "detalle": {
+    "256GB": 949.9,
+    "512GB": 1059.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047812-8806097827801-pr-movil-samsung-galaxy-s26-63-exynos-2600-blanco-256-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:40.911Z"
+  },
+  "649xodjfpu7f3qpy514u": {
+   "precio": "1299,90 €",
+   "detalle": {
+    "512GB": 1299.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047814-8806097828327-pr-movil-samsung-galaxy-s26-67-exynos-2600-negro-512-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:40.912Z"
+  },
+  "3o1ab08tjngu37q2z3d6": {
+   "precio": "769,90 €",
+   "detalle": {
+    "128GB": 769.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202033692-8806099395292-pr-movil-samsung-galaxy-s26-fe-67-exynos-2500-blueberry-128-gb-8-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:41.151Z"
+  },
+  "uj812u1z9tjx2ozblfdz": {
+   "precio": "1449,90 € – 1749,90 €",
+   "detalle": {
+    "512GB": 1449.9,
+    "1TB": 1749.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202047813-8806097826897-pr-movil-samsung-galaxy-s26-ultra-69-qualcomm-snapdragon-8-elite-blanco-512-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T17:55:43.749Z"
+  },
+  "0nwndeqnix14m2tvmw0z": {
+   "precio": "649,90 €",
+   "detalle": {
+    "256GB": 649.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A200824328-6932554448448-pr-movil-xiaomi-17t-359-mediatek-dimensity-8500-ultra-violeta-256-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-16T05:55:41.097Z"
+  },
+  "da6lmw67qy5u6g60gh7m": {
+   "precio": "849,90 € – 899,90 €",
+   "detalle": {
+    "512GB": 849.9,
+    "1TB": 899.9
+   },
+   "url": "https://www.elcorteingles.es/electronica/A202058681-6932554469498-pr-movil-xiaomi-17t-pro-683-mediatek-dimensity-9500-deep-blue-512-gb-12-gb-ram/",
+   "pack": false,
+   "agotado": false,
+   "consultado": "2026-10-17T05:55:41.023Z"
+  }
+ }
+}
