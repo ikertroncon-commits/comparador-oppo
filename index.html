@@ -114,6 +114,8 @@
     "En pack con accesorios": ["Bundle with accessories", "Em pack com acessórios", "含配件套裝"],
     "Sin stock online": ["Out of stock online", "Sem stock online", "網店缺貨"],
     "Precio general de la ficha": ["General price from the spec sheet", "Preço geral da ficha", "規格表一般價格"],
+    "PvP ECI Península": ["ECI mainland price", "PVP ECI Península", "ECI 本土價格"],
+    "PvP ECI Canarias": ["ECI Canary Islands price", "PVP ECI Canárias", "ECI 加那利群島價格"],
     "PvP El Corte Inglés Península": ["El Corte Inglés mainland price", "PVP El Corte Inglés Península", "El Corte Inglés 本土價格"],
     "PvP El Corte Inglés Canarias": ["El Corte Inglés Canary Islands price", "PVP El Corte Inglés Canárias", "El Corte Inglés 加那利群島價格"],
     "Ranking DXOMARK": ["DXOMARK ranking", "Ranking DXOMARK", "DXOMARK 排名"],
@@ -1533,7 +1535,9 @@ if ("serviceWorker" in navigator) {
   // Detalle de cámaras: no tienen fila propia en la comparativa, van dentro de «Cámaras traseras» / «Cámara frontal»
   var CAM_DETAIL_FIELDS = ["Sensor principal", "Gran angular", "Teleobjetivo", "Sensor frontal"];
   // «Cámara principal» guarda el resumen de todas las cámaras traseras
-  function fieldLabel(f) { return f === "Cámara principal" ? "Cámaras traseras" : f; }
+  // nombre que se ve (el dato se guarda con su nombre largo para no perder lo ya escrito)
+  var FIELD_LABELS = { "Cámara principal": "Cámaras traseras", "PvP El Corte Inglés Península": "PvP ECI Península", "PvP El Corte Inglés Canarias": "PvP ECI Canarias" };
+  function fieldLabel(f) { return FIELD_LABELS[f] || f; }
   // Ciclos de carga de la etiqueta energética UE: van debajo de la batería, sin fila propia
   var SUB_FIELDS = ["Ciclos de batería", "Ranking DXOMARK", "PvP El Corte Inglés Península", "PvP El Corte Inglés Canarias"];
   var SPEC_PLACEHOLDERS = {
@@ -3916,7 +3920,7 @@ if ("serviceWorker" in navigator) {
     SPEC_FIELDS.forEach(function (field) {
       var isVariant = VARIANT_FIELDS.indexOf(field) !== -1;
       var f = el("div", "spec-field" + (isVariant ? " spec-field-variant" : ""));
-      var label = el("label", null, field === "Cámara principal" ? "Cámaras traseras (resumen, ej. 50mpx + 8mpx + 2mpx)" : field);
+      var label = el("label", null, field === "Cámara principal" ? "Cámaras traseras (resumen, ej. 50mpx + 8mpx + 2mpx)" : fieldLabel(field));
       f.appendChild(label);
       if (isVariant) {
         var existing = (model && model.specs && model.specs[field]) ? model.specs[field] : "";
