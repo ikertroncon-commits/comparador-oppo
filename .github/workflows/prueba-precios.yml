@@ -15,4 +15,4 @@ jobs:
       - name: Guardar resultado
         run: |
           git config user.name "ikertroncon-commits"; git config user.email "ikertroncon-commits@users.noreply.github.com"
-          git add herramientas/resultado_prueba.json && git commit -m "Resultado de la prueba de precios" && git push || true
+          git add herramientas/ && git commit -m "Resultado de la prueba de precios" && git push || true
