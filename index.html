@@ -4411,11 +4411,11 @@ if ("serviceWorker" in navigator) {
 (function () {
   "use strict";
   var CANALES = [
-    { id: "mm_pen", code: "MM", sub: "Pen.", name: "MediaMarkt Península", auto: true },
-    { id: "mm_can", code: "MM", sub: "Can.", name: "MediaMarkt Canarias", auto: true },
-    { id: "worten_can", code: "WO", sub: "Can.", name: "Worten Canarias", auto: true },
-    { id: "eci_pen", code: "ECI", sub: "Pen.", name: "El Corte Inglés Península", field: "PvP El Corte Inglés Península", auto: true },
-    { id: "eci_can", code: "ECI", sub: "Can.", name: "El Corte Inglés Canarias", field: "PvP El Corte Inglés Canarias" }
+    { id: "mm_pen", code: "MM", sub: "Pen.", name: "MM Península", auto: true },
+    { id: "mm_can", code: "MM", sub: "Can.", name: "MM Canarias", auto: true },
+    { id: "worten_can", code: "WRT", sub: "Can.", name: "WRT Canarias", auto: true },
+    { id: "eci_pen", code: "ECI", sub: "Pen.", name: "ECI Península", field: "PvP El Corte Inglés Península", auto: true },
+    { id: "eci_can", code: "ECI", sub: "Can.", name: "ECI Canarias", field: "PvP El Corte Inglés Canarias" }
   ];
   var sel = null, subs = [];
   try { sel = localStorage.getItem("comparador-pvp"); } catch (e) {}
