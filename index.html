@@ -1537,7 +1537,7 @@ if ("serviceWorker" in navigator) {
   // Ciclos de carga de la etiqueta energética UE: van debajo de la batería, sin fila propia
   var SUB_FIELDS = ["Ciclos de batería", "Ranking DXOMARK", "PvP El Corte Inglés Península", "PvP El Corte Inglés Canarias"];
   var SPEC_PLACEHOLDERS = {
-    "PvP El Corte Inglés Península": "Ej. 899 € (o 699 € – 999 € si hay varias capacidades)",
+    "PvP El Corte Inglés Península": "Se rellena solo cada lunes y jueves; escribe aquí solo para corregirlo (ej. 899 €)",
     "PvP El Corte Inglés Canarias": "Ej. 849 € (o 649 € – 949 € si hay varias capacidades)",
     "Ranking DXOMARK": "Puesto en el ranking de cámara de DXOMARK, ej. 5 (vacío si no está)",
     "Ciclos de batería": "Ej. 1200 (etiqueta energética UE; vacío si no tiene)",
@@ -3054,14 +3054,19 @@ if ("serviceWorker" in navigator) {
   }
 
   // ---------- precio de venta por canal (PvP) ----------
+  function pvpManual(model, canal) {
+    return canal.field ? String((model && model.specs && model.specs[canal.field]) || "").replace(/^[\s.\-–—]*$/, "").trim() : "";
+  }
   function pvpEntry(model, canal) {
-    if (!model || canal.field) return null;
+    if (!model || pvpManual(model, canal)) return null; // el precio puesto a mano manda
+    if (!canal.auto) return null;
     var d = window.PVP && window.PVP.data[canal.id];
     return (d && d.modelos && d.modelos[model.id]) || null;
   }
   function pvpOf(model, canal) {
     if (!model) return "";
-    if (canal.field) return String((model.specs && model.specs[canal.field]) || "").trim();
+    var manual = pvpManual(model, canal);
+    if (manual) return manual;
     var e = pvpEntry(model, canal);
     return e && e.precio ? String(e.precio) : "";
   }
@@ -4409,7 +4414,7 @@ if ("serviceWorker" in navigator) {
     { id: "mm_pen", code: "MM", sub: "Pen.", name: "MediaMarkt Península", auto: true },
     { id: "mm_can", code: "MM", sub: "Can.", name: "MediaMarkt Canarias", auto: true },
     { id: "worten_can", code: "WO", sub: "Can.", name: "Worten Canarias", auto: true },
-    { id: "eci_pen", code: "ECI", sub: "Pen.", name: "El Corte Inglés Península", field: "PvP El Corte Inglés Península" },
+    { id: "eci_pen", code: "ECI", sub: "Pen.", name: "El Corte Inglés Península", field: "PvP El Corte Inglés Península", auto: true },
     { id: "eci_can", code: "ECI", sub: "Can.", name: "El Corte Inglés Canarias", field: "PvP El Corte Inglés Canarias" }
   ];
   var sel = null, subs = [];
