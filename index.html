@@ -110,6 +110,12 @@
     "RAM": ["RAM", "RAM", "RAM"],
     "Almacenamiento": ["Storage", "Armazenamento", "儲存空間"],
     "Batería": ["Battery", "Bateria", "電池"],
+    "Precio de venta (PvP)": ["Retail price (RRP)", "Preço de venda (PVP)", "零售價 (PvP)"],
+    "En pack con accesorios": ["Bundle with accessories", "Em pack com acessórios", "含配件套裝"],
+    "Sin stock online": ["Out of stock online", "Sem stock online", "網店缺貨"],
+    "Precio general de la ficha": ["General price from the spec sheet", "Preço geral da ficha", "規格表一般價格"],
+    "PvP El Corte Inglés Península": ["El Corte Inglés mainland price", "PVP El Corte Inglés Península", "El Corte Inglés 本土價格"],
+    "PvP El Corte Inglés Canarias": ["El Corte Inglés Canary Islands price", "PVP El Corte Inglés Canárias", "El Corte Inglés 加那利群島價格"],
     "Ranking DXOMARK": ["DXOMARK ranking", "Ranking DXOMARK", "DXOMARK 排名"],
     "Puesto {0} en el ranking de cámara de DXOMARK": ["No. {0} in the DXOMARK camera ranking", "N.º {0} no ranking de câmara da DXOMARK", "DXOMARK 相機排名第 {0} 名"],
     "Ciclos de batería": ["Battery cycles", "Ciclos da bateria", "電池充電循環"],
@@ -395,6 +401,15 @@
     background: var(--surface-sunken); font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
   .lang-menu button[aria-checked="true"] { background: var(--win-bg); }
   .lang-menu button[aria-checked="true"] .code { background: var(--win); color: #fff; }
+  .pvp-btn span { font-size: 11px; letter-spacing: 0; }
+  /* administrador en móvil: sin el nombre de la app para que quepan pestañas, idioma, PvP y tema */
+  @media (max-width: 470px) { html.es-admin .topbar .logo { display: none; } html.es-admin .topbar-right { margin-left: auto; } }
+  @media (max-width: 370px) { html.es-admin .topbar-right { gap: 5px; } html.es-admin .topbar-right .theme-btn { width: 34px; height: 34px; } }
+  .pvp-btn.on { background: var(--gradient); color: #fff; border-color: transparent; }
+  .pvp-menu { min-width: 236px; }
+  .pvp-menu .pvp-title { padding: 8px 12px 6px; font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); }
+  .pvp-menu button .code { width: 34px; }
+  .spec-pvp-src { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--ink-faint); margin-top: 2px; }
   .lang-pills { display: flex; justify-content: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
   .lang-pills button { padding: 6px 9px; border-radius: 999px; border: 1px solid var(--border); background: none; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
   .lang-pills button[aria-pressed="true"] { background: var(--gradient); color: #fff; border-color: transparent; }
@@ -899,6 +914,10 @@ if ("serviceWorker" in navigator) {
       <div class="lang-wrap no-tr">
         <button id="lang-btn" class="theme-btn lang-btn" type="button" aria-label="Idioma" title="Idioma" aria-haspopup="true" aria-expanded="false"><span id="lang-btn-txt">ES</span></button>
         <div id="lang-menu" class="lang-menu" role="menu" hidden></div>
+      </div>
+      <div class="lang-wrap no-tr">
+        <button id="pvp-btn" class="theme-btn lang-btn pvp-btn" type="button" aria-label="Precio de venta" title="Precio de venta (PvP)" aria-haspopup="true" aria-expanded="false"><span>PvP</span></button>
+        <div id="pvp-menu" class="lang-menu pvp-menu" role="menu" hidden></div>
       </div>
       <button id="theme-btn" class="theme-btn" type="button" aria-label="Cambiar a modo claro" title="Modo claro / oscuro"><svg class="ic-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="ic-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg></button>
     </div>
@@ -1508,15 +1527,18 @@ if ("serviceWorker" in navigator) {
     "Batería", "Ciclos de batería", "Carga rápida", "Cámara principal",
     "Sensor principal", "Gran angular", "Teleobjetivo",
     "Cámara frontal", "Sensor frontal",
-    "Resistencia (IP)", "Precio", "Ranking DXOMARK"
+    "Resistencia (IP)", "Precio", "Ranking DXOMARK",
+    "PvP El Corte Inglés Península", "PvP El Corte Inglés Canarias"
   ];
   // Detalle de cámaras: no tienen fila propia en la comparativa, van dentro de «Cámaras traseras» / «Cámara frontal»
   var CAM_DETAIL_FIELDS = ["Sensor principal", "Gran angular", "Teleobjetivo", "Sensor frontal"];
   // «Cámara principal» guarda el resumen de todas las cámaras traseras
   function fieldLabel(f) { return f === "Cámara principal" ? "Cámaras traseras" : f; }
   // Ciclos de carga de la etiqueta energética UE: van debajo de la batería, sin fila propia
-  var SUB_FIELDS = ["Ciclos de batería", "Ranking DXOMARK"];
+  var SUB_FIELDS = ["Ciclos de batería", "Ranking DXOMARK", "PvP El Corte Inglés Península", "PvP El Corte Inglés Canarias"];
   var SPEC_PLACEHOLDERS = {
+    "PvP El Corte Inglés Península": "Ej. 899 € (o 699 € – 999 € si hay varias capacidades)",
+    "PvP El Corte Inglés Canarias": "Ej. 849 € (o 649 € – 949 € si hay varias capacidades)",
     "Ranking DXOMARK": "Puesto en el ranking de cámara de DXOMARK, ej. 5 (vacío si no está)",
     "Ciclos de batería": "Ej. 1200 (etiqueta energética UE; vacío si no tiene)",
     "Sensor principal": "Ej. 50 MP · Sony LYT-828 · 1/1,28\"",
@@ -1712,6 +1734,7 @@ if ("serviceWorker" in navigator) {
     tr.lang = I18N.lang;
     if (tr.lang !== "es") loadTranslations(tr.lang);
     I18N.onChange(loadTranslations);
+    if (window.PVP) window.PVP.onChange(function () { if (!$("comparison-result").hidden) showComparison(true); });
     subscribeBrands();
     subscribeModels();
     subscribeInterests();
@@ -3030,6 +3053,27 @@ if ("serviceWorker" in navigator) {
     return card;
   }
 
+  // ---------- precio de venta por canal (PvP) ----------
+  function pvpEntry(model, canal) {
+    if (!model || canal.field) return null;
+    var d = window.PVP && window.PVP.data[canal.id];
+    return (d && d.modelos && d.modelos[model.id]) || null;
+  }
+  function pvpOf(model, canal) {
+    if (!model) return "";
+    if (canal.field) return String((model.specs && model.specs[canal.field]) || "").trim();
+    var e = pvpEntry(model, canal);
+    return e && e.precio ? String(e.precio) : "";
+  }
+  function pvpFecha(canal) {
+    var d = canal.auto && window.PVP && window.PVP.data[canal.id];
+    if (!d || !d.actualizado) return "";
+    var f = new Date(d.actualizado);
+    if (isNaN(f)) return "";
+    var p2 = function (n) { return (n < 10 ? "0" : "") + n; };
+    return " · " + p2(f.getDate()) + "/" + p2(f.getMonth() + 1);
+  }
+
   // ---------- quién gana en cada dato (opción C) ----------
   // AnTuTu v11 (nanoreview.net, oct 2026). Clave = nombre simplificado del chip
   var ANTUTU = {"dimensity7360turbo": 925000,"dimensity7360": 925000,"dimensity7400turbo": 953000,"dimensity7400": 953000,"exynos1330": 607000,"exynos1480": 1022000,"exynos1680": 1390000,"exynos2500": 2290000,"exynos2600": 3161000,"tensorg6": 1934000,"dimensity6400": 581000,"dimensity7100elite": 837000,"dimensity7300": 880000,"dimensity8500": 2120000,"dimensity9500": 3761000,"g81": 359000,"g81extreme": 359000,"g91": 354000,"g91ultra": 354000,"dimensity6300": 528000,"dimensity9600pro": 4838000,"dimensity9600m": 4012000,"g99": 555000,"snapdragon4gen2": 568000,"snapdragon4gen4": 594000,"snapdragon4gen5": 624000,"snapdragon6gen1": 737000,"snapdragon6gen3": 840000,"snapdragon6gen4": 975000,"snapdragon6gen5": 1012000,"snapdragon685": 476000,"snapdragon6s4ggen2": 506000,"snapdragon6sgen4": 830000,"snapdragon7gen4": 1330000,"snapdragon7sgen3": 1042000,"snapdragon8elite": 3126000,"snapdragon8elite5": 3950000,"snapdragon8elitegen5": 3950000,"snapdragon8eliteextremegen6": 5196000,"snapdragon8gen5": 3057000,"ums9230": 334000,"t606": 334000};
@@ -3297,7 +3341,9 @@ if ("serviceWorker" in navigator) {
       var tr = document.createElement("tr");
       tr.setAttribute("data-field", field);
       var vC = (competitor.specs && competitor.specs[field]) || "", vO = (oppo.specs && oppo.specs[field]) || "";
-      if (/^[\s.\-–—]*$/.test(vC) && /^[\s.\-–—]*$/.test(vO)) return; // sin datos en ninguno: no se muestra
+      var pvpCanal = field === "Precio" && window.PVP ? window.PVP.canal() : null;
+      if (pvpCanal) { vC = pvpOf(competitor, pvpCanal); vO = pvpOf(oppo, pvpCanal); }
+      if (!pvpCanal && /^[\s.\-–—]*$/.test(vC) && /^[\s.\-–—]*$/.test(vO)) return; // sin datos en ninguno: no se muestra
       var tdLabel = el("td", "spec-label");
       var ICON_BY_FIELD = { "Pantalla": "pantalla", "Procesador": "procesador", "RAM": "memoria", "Almacenamiento": "memoria",
         "Batería": "bateria", "Carga rápida": "carga", "Cámara principal": "camara", "Cámara frontal": "camara",
@@ -3307,6 +3353,17 @@ if ("serviceWorker" in navigator) {
       tdLabel.appendChild(document.createTextNode(field));
       var tdComp = el("td", "spec-competitor", (competitor.specs && competitor.specs[field]) ? SV(competitor.specs[field]) : "—");
       var tdOppo = el("td", "spec-oppo", (oppo.specs && oppo.specs[field]) ? SV(oppo.specs[field]) : "—");
+      if (pvpCanal) {
+        tdComp.textContent = /^[\s.\-–—]*$/.test(vC) ? "—" : SV(vC);
+        tdOppo.textContent = /^[\s.\-–—]*$/.test(vO) ? "—" : SV(vO);
+        [[tdComp, competitor], [tdOppo, oppo]].forEach(function (pair) {
+          var e = pvpEntry(pair[1], pvpCanal);
+          if (e && e.pack) pair[0].appendChild(el("small", "spec-antutu", T("En pack con accesorios")));
+          if (e && e.agotado) pair[0].appendChild(el("small", "spec-antutu", T("Sin stock online")));
+        });
+        var src = el("small", "spec-pvp-src no-tr", pvpCanal.name + pvpFecha(pvpCanal));
+        tdLabel.appendChild(src);
+      }
       if (field === "Procesador") {
         [[tdComp, vC], [tdOppo, vO]].forEach(function (pair) {
           var sc = antutuOf(pair[1]);
@@ -4342,6 +4399,68 @@ if ("serviceWorker" in navigator) {
   document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target)) close(); });
   I.onChange(paint);
   paint();
+})();
+</script>
+<script>
+// Selector de precio de venta (PvP) por canal: cada vendedor elige el suyo y se guarda en su móvil
+(function () {
+  "use strict";
+  var CANALES = [
+    { id: "mm_pen", code: "MM", sub: "Pen.", name: "MediaMarkt Península", auto: true },
+    { id: "mm_can", code: "MM", sub: "Can.", name: "MediaMarkt Canarias", auto: true },
+    { id: "worten_can", code: "WO", sub: "Can.", name: "Worten Canarias", auto: true },
+    { id: "eci_pen", code: "ECI", sub: "Pen.", name: "El Corte Inglés Península", field: "PvP El Corte Inglés Península" },
+    { id: "eci_can", code: "ECI", sub: "Can.", name: "El Corte Inglés Canarias", field: "PvP El Corte Inglés Canarias" }
+  ];
+  var sel = null, subs = [];
+  try { sel = localStorage.getItem("comparador-pvp"); } catch (e) {}
+  if (!CANALES.some(function (c) { return c.id === sel; })) sel = null;
+  window.PVP = {
+    canales: CANALES, data: {},
+    get sel() { return sel; },
+    canal: function () { return CANALES.filter(function (c) { return c.id === sel; })[0] || null; },
+    set: function (id) {
+      sel = id || null;
+      try { if (sel) localStorage.setItem("comparador-pvp", sel); else localStorage.removeItem("comparador-pvp"); } catch (e) {}
+      paint(); subs.forEach(function (f) { try { f(); } catch (e) {} });
+    },
+    onChange: function (f) { subs.push(f); }
+  };
+  var btn = document.getElementById("pvp-btn"), menu = document.getElementById("pvp-menu");
+  function close() { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+  function item(code, label, checked, onClick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "menuitemradio"); b.setAttribute("aria-checked", String(checked));
+    var c = document.createElement("span"); c.className = "code"; c.textContent = code;
+    b.appendChild(c); b.appendChild(document.createTextNode(label));
+    b.addEventListener("click", function () { close(); onClick(); });
+    return b;
+  }
+  function paint() {
+    var T = (window.I18N && window.I18N.t) || function (x) { return x; };
+    btn.classList.toggle("on", !!sel);
+    var c = window.PVP.canal();
+    btn.title = T("Precio de venta (PvP)") + (c ? ": " + c.name : "");
+    menu.innerHTML = "";
+    var h = document.createElement("div"); h.className = "pvp-title"; h.textContent = T("Precio de venta (PvP)"); menu.appendChild(h);
+    menu.appendChild(item("—", T("Precio general de la ficha"), !sel, function () { window.PVP.set(null); }));
+    CANALES.forEach(function (ch) {
+      menu.appendChild(item(ch.code, ch.name, ch.id === sel, function () { window.PVP.set(ch.id); }));
+    });
+  }
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var open = menu.hidden; menu.hidden = !open; btn.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target)) close(); });
+  if (window.I18N) window.I18N.onChange(paint);
+  paint();
+  // Precios automáticos (se actualizan los lunes y jueves): un archivo por canal
+  CANALES.filter(function (c) { return c.auto; }).forEach(function (ch) {
+    fetch("precios/" + ch.id + ".json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.modelos) { window.PVP.data[ch.id] = d; subs.forEach(function (f) { try { f(); } catch (e) {} }); } })
+      .catch(function () {});
+  });
 })();
 </script>
 <script>

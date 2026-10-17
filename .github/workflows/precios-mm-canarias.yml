@@ -1,0 +1,41 @@
+name: Precios MediaMarkt Canarias
+
+# Lunes 10:00 y jueves 13:00 (hora de Canarias). GitHub usa hora UTC y no cambia con el horario
+# de verano, así que se lanza a las dos horas posibles y el script solo actúa a la hora buena.
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+    - cron: '0 10 * * 1'
+    - cron: '0 12 * * 4'
+    - cron: '0 13 * * 4'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  actions: write
+
+concurrency: precios
+
+jobs:
+  precios:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Leer precios
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then F=--forzar; fi
+          python3 herramientas/precios_mm_canarias.py $F
+      - name: Guardar y publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "ikertroncon-commits"
+          git config user.email "ikertroncon-commits@users.noreply.github.com"
+          git add precios/mm_can.json
+          if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
+          git commit -m "Precios MediaMarkt Canarias $(TZ=Atlantic/Canary date '+%d/%m %H:%M')"
+          git pull --rebase -q origin main && git push -q origin HEAD:main
+          # un push hecho por este flujo no relanza la publicación: se pide a mano
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null || true
+          gh workflow run firebase-hosting.yml --ref main || true

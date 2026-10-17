@@ -1,0 +1,464 @@
+{
+ "canal": "mm_can",
+ "nombre": "MediaMarkt Canarias",
+ "actualizado": "2026-10-17T09:48+01:00",
+ "modelos": {
+  "j7w7ejjq9mf27fwx42ne": {
+   "precio": "479 €",
+   "detalle": {
+    "512GB": 479.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-honor-600-naranja-512gb-8gb-ram-6-57-amoled-plataforma-movil-snapdragon-7-gen-4-6400-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "mjbh3sipzcnoxtqwfin5": {
+   "precio": "339 €",
+   "detalle": {
+    "256GB": 339.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-honor-600-lite-velvet-black-256-gb-8-gb-ram-6-6-amoled-mediatek-dimensity-7100-elite-6520-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "r1gxygov23bh4oze7b09": {
+   "precio": "259 €",
+   "detalle": {
+    "256GB": 259.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/honor-600-smart-5g-velvet-black-256gb-4gb-ram-6-87-qualcomm-7700-mah-negro",
+   "pack": false,
+   "agotado": false
+  },
+  "hejrj215wnk5vafpqzpy": {
+   "precio": "179 € – 235 €",
+   "detalle": {
+    "256GB": 235.0,
+    "128GB": 179.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-a17-lte-negro-128-gb-4-gb-ram-6-7-fhd-super-amoled-mediatek-g99-octa-core-5000-mah-android-15",
+   "pack": false,
+   "agotado": false
+  },
+  "3q8jlsn0lquzd7uomhlw": {
+   "precio": "269 €",
+   "detalle": {
+    "256GB": 269.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-a17-azul-256-gb-8-gb-ram-6-7-fhd-super-amoled-mediatek-g99-octa-core-5000-mah-android-15",
+   "pack": false,
+   "agotado": false
+  },
+  "0oh7a8gxzx8kqb6kx462": {
+   "precio": "269 € – 359 €",
+   "detalle": {
+    "128GB": 269.0,
+    "256GB": 359.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-a27-5g-azul-128-gb-6-gb-ram-6-7-fhd-super-amoled-qualcomm-snapdragon-6-gen-3-5000-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "vhnqr3mshm67cwoqwk4f": {
+   "precio": "399 €",
+   "detalle": {
+    "256GB": 399.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-a37-verde-oscuro-256-gb-8-gb-ram-6-7-fhd-exynos-1480-5000-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "1dhz59obuitjw2tvodjd": {
+   "precio": "439 €",
+   "detalle": {
+    "256GB": 439.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-a57-azul-oscuro-256-gb-8-gb-ram-6-7-fhd-exynos-1680-5000-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "5dli40eqxfur7aqpa5hl": {
+   "precio": "409 €",
+   "detalle": {
+    "256GB": 409.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/motorola-edge-70-fusion-silhouette-256gb-12gb-ram-6-78-extreme-amoled-qualcomm-snapdragon-7s-gen-3-7000-mah-incluye-auriculares",
+   "pack": false,
+   "agotado": false
+  },
+  "7pmtnq9izbk2lnx90y6z": {
+   "precio": "549 €",
+   "detalle": {
+    "256GB": 549.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-motorola-edge-70-max-pantone-dark-shadow-256-gb-8-gb-ram-6-82-extreme-amoled-snapdragon-8-gen-5-7100-mah",
+   "pack": false,
+   "agotado": true
+  },
+  "ssb6qhid8muyjgua3xn9": {
+   "precio": "139 €",
+   "detalle": {
+    "256GB": 139.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-motorola-g06-power-laurel-oak-256-gb-4-gb-ram-6-88-hd-120-hz-mediatek-helio-g81-extreme-7000-mah",
+   "pack": false,
+   "agotado": true
+  },
+  "yyuykg9b0gutbudzoryt": {
+   "precio": "319 €",
+   "detalle": {
+    "256GB": 319.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-honor-magic8-lite-reddish-brown-256gb-8gb-ram-6-79-amoled-de-4320-hz-qualcomm-r-snapdragon-r-6-gen-4-4nm-7500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "xsh1tlit9zxziohqbuey": {
+   "precio": "1099 €",
+   "detalle": {
+    "512GB": 1099.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-honor-magic8-pro-gold-512-gb-12-gb-ram-6-71-oled-qualcomm-r-snapdragon-r-8-elite-5-3nm-6270mah",
+   "pack": false,
+   "agotado": false
+  },
+  "j8f8rg7sxb9iycbtuhzy": {
+   "precio": "219 €",
+   "detalle": {
+    "256GB": 219.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-motorola-moto-g77-shaded-spruce-256-gb-8-gb-ram-6-78-extreme-amoled-mediatek-dimensity-6400-6-nm-5200-mah",
+   "pack": false,
+   "agotado": true
+  },
+  "i5rbop5zpq9i13e72ob2": {
+   "precio": "309 €",
+   "detalle": {
+    "256GB": 309.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-motorola-moto-g87-overture-256-gb-8-gb-ram-6-78-extreme-amoled-mediatek-dimensity-6400-5200-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "q1urw7ibrgidhhn1e55w": {
+   "precio": "189 €",
+   "detalle": {
+    "256GB": 189.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/oppo-a6-4g-sapphire-black-256-gb-6-gb-ram-6-75-lcd-qualcomm-snapdragon-r-685-6nm-6-500mah",
+   "pack": false,
+   "agotado": false
+  },
+  "3qevc9vwvbjfwckokvnm": {
+   "precio": "229 €",
+   "detalle": {
+    "256GB": 229.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-a6-5g-sapphire-black-256-gb-6-gb-ram-6-75-lcd-mediatek-dimensity-6300-6nm-6-500mah",
+   "pack": false,
+   "agotado": false
+  },
+  "2o0z8c0epcku55n2r2bd": {
+   "precio": "259 €",
+   "detalle": {
+    "256GB": 259.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-a6-pro-5g-lunar-titanium-256gb-8gb-ram-6-57-amoled-mediatek-dimensity-6300-6nm-6-500mah-ip69-pantalla-amoled-120-hz",
+   "pack": false,
+   "agotado": false
+  },
+  "f2m7aavuqltzxx1oj6sx": {
+   "precio": "195 €",
+   "detalle": {
+    "256GB": 195.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-a6k-crystal-blue-256-gb-4-gb-ram-6-75-lcd-qualcomm-snapdragon-r-685-6nm-6100-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "1wmopm8a1t1w0vzqvv7w": {
+   "precio": "159 €",
+   "detalle": {
+    "128GB": 159.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-a6x-purpura-128-gb-4-gb-ram-6-75-lcd-display-qualcomm-snapdragon-685-6100-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "3utfe7l551mmm66ojkkn": {
+   "precio": "799 €",
+   "detalle": {
+    "512GB": 799.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-find-x9-space-black-512-gb-12-gb-ram-6-59-amoled-proxdr-gorilla-glass-120-hz-mediatek-9500-7025-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "9gwduqvsgoj19ay8zldb": {
+   "precio": "1069 €",
+   "detalle": {
+    "512GB": 1069.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-find-x9-pro-silk-white-512-gb-16-gb-ram-6-78-amoled-proxdr-gorilla-glass-120-hz-mediatek-9500-7500-mah",
+   "pack": false,
+   "agotado": true
+  },
+  "bxt6zxd5nzms782inr8a": {
+   "precio": "1398 €",
+   "detalle": {
+    "512GB": 1398.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-find-x9-ultra-tundra-umber-512gb-12gb-ram-6-82-amoled-flexible-qhd-snapdragon-r-8-elite-gen-5-7050-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "jn30pcgzdidjkyof2e0b": {
+   "precio": "359 €",
+   "detalle": {
+    "512GB": 359.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-oppo-reno15-fs-twilight-black-512-gb-8-gb-ram-6-57-amoled-qualcomm-snapdragon-6-gen-1-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "wo1exys1td9eaz4mev5a": {
+   "precio": "699 €",
+   "detalle": {
+    "512GB": 699.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/oppo-reno16-purpura-negro-512-gb-8-gb-ram-6-32-amoled-qualcomm-snapdragon-r-7-gen-4-6000-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "u2rt42cvkgcw1brex6d3": {
+   "precio": "449 €",
+   "detalle": {
+    "256GB": 449.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/oppo-reno16-f-purpura-negro-256-gb-8-gb-ram-6-57-amoled-mediatek-dimensity-7300-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "zv2gje5la5no3pdtky8w": {
+   "precio": "529 €",
+   "detalle": {
+    "512GB": 529.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/oppo-reno16-fs-blanco-512-gb-8-gb-ram-6-57-amoled-mediatek-dimensity-7300-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "vspza036foosmiv752nk": {
+   "precio": "999 €",
+   "detalle": {
+    "256GB": 999.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/google-pixel-11-pro-obsidiana-256gb-12gb-ram-6-34-oled-google-tensor-g6-4850-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "6c3gevhh0qtq306ojeqx": {
+   "precio": "1309 €",
+   "detalle": {
+    "512GB": 1309.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/google-pixel-11-pro-xl-fog-512gb-16gb-ram-6-8-oled-google-tensor-g6-5115-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "3itb2uulirex5wycjhpo": {
+   "precio": "179 €",
+   "detalle": {
+    "256GB": 179.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-17-verde-256-gb-4-gb-ram-6-9-lcd-hd-mediatek-helio-g91-ultr-7500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "t9v42sahx85o7c5lq9uz": {
+   "precio": "209 €",
+   "detalle": {
+    "256GB": 209.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-17-5g-naranja-intenso-256-gb-4-gb-ram-6-9-lcd-snapdragon-r-4-gen-5-con-5g-7500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "7y1vl7z42vd08ev7pw70": {
+   "precio": "239 €",
+   "detalle": {
+    "256GB": 239.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-note-17-negro-256gb-6gb-ram-6-99-amoled-snapdragon-6s-4g-gen-2-7700-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "xctx6r20uob1q1sj9j2w": {
+   "precio": "269 €",
+   "detalle": {
+    "256GB": 269.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-note-17-5g-negro-256gb-6gb-ram-6-99-fhd-snapdragon-4-gen-4-7700-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "4zbouqclfh7tquex28aq": {
+   "precio": "329 €",
+   "detalle": {
+    "256GB": 329.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-note-17-pro-morado-256gb-6gb-ram-6-83-amoled-1-5k-snapdragon-6s-gen-4-8340-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "fsmdp89i2twv9b8pwyng": {
+   "precio": "449 € – 509 €",
+   "detalle": {
+    "256GB": 449.0,
+    "512GB": 509.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/xiaomi-redmi-note-17-pro-max-negro-256gb-8gb-ram-6-83-amoled-1-5k-snapdragon-6-gen-5-9210-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "4d3mzngwmjpyrleg0zym": {
+   "precio": "809 € – 939 €",
+   "detalle": {
+    "256GB": 809.0,
+    "512GB": 939.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-s26-negro-256-gb-12-gb-ram-6-3-fhd-exynos-2600-4300-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "649xodjfpu7f3qpy514u": {
+   "precio": "949 € – 1099 €",
+   "detalle": {
+    "512GB": 1099.0,
+    "256GB": 949.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-s26-violeta-256-gb-12-gb-ram-6-7-qhd-exynos-2600-4900-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "3o1ab08tjngu37q2z3d6": {
+   "precio": "639 €",
+   "detalle": {
+    "128GB": 639.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-s26-fe-grafito-128gb-8gb-ram-6-7-dynamic-amoled-2x-fhd-exynos-2500-4900-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "uj812u1z9tjx2ozblfdz": {
+   "precio": "1299 € – 1549 €",
+   "detalle": {
+    "512GB": 1299.0,
+    "1TB": 1549.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-samsung-galaxy-s26-ultra-negro-512-gb-12-gb-ram-6-9-qhd-qualcomm-snapdragon-8-elite-gen-5-5000-mah-android-16",
+   "pack": false,
+   "agotado": false
+  },
+  "o79owsld85br7m9qyi0d": {
+   "precio": "599 €",
+   "detalle": {
+    "512GB": 599.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-v70-sandalwood-brown-512gb-8gb-ram-6-59-amoled-snapdragon-r-7-gen-4-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "qglvwip0k472otq63bcq": {
+   "precio": "349 €",
+   "detalle": {
+    "256GB": 349.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-v70-fe-ocean-blue-256gb-8gb-ram-6-83-amoled-dimensity-7360-turbo-7000-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "0swpouf36sgeyimborlh": {
+   "precio": "359 €",
+   "detalle": {
+    "256GB": 359.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-v70-lite-titanium-blue-256-gb-6-gb-ram-6-77-amoled-dimensity-7400-turbo-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "4sw5fj42y0z19g92qdv3": {
+   "precio": "1079 €",
+   "detalle": {
+    "512GB": 1079.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-bundle-x300-fe-luxe-black-512-gb-12-gb-ram-6-31-amoled-snapdragon-r-8-gen-5-mobile-6500-mah",
+   "pack": true,
+   "agotado": false
+  },
+  "lgip4p43td5xz26swznw": {
+   "precio": "1349 €",
+   "detalle": {
+    "512GB": 1349.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-bundle-x300-pro-phantom-black-512-gb-16-gb-ram-6-78-amoled-120-hz-mediatek-dimensity-9500-5440-mah",
+   "pack": true,
+   "agotado": false
+  },
+  "iuhklahlklg0cs14ixcr": {
+   "precio": "129 €",
+   "detalle": {
+    "128GB": 129.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-honor-x5c-plus-midnight-black-128gb-4gb-ram-6-74-tft-lcd-mediatek-helio-g81-6nm-5260mah",
+   "pack": false,
+   "agotado": true
+  },
+  "0nwndeqnix14m2tvmw0z": {
+   "precio": "599 €",
+   "detalle": {
+    "256GB": 599.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-xiaomi-17t-negro-256gb-12gb-ram-6-59-poled-mediatek-dimensity-8500-ultra-de-4-nm-6500mah",
+   "pack": false,
+   "agotado": false
+  },
+  "da6lmw67qy5u6g60gh7m": {
+   "precio": "819 € – 899 €",
+   "detalle": {
+    "1TB": 899.0,
+    "512GB": 819.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-xiaomi-17t-pro-azul-512-gb-12-gb-ram-6-83-poled-mediatek-dimensity-9500-7000-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "1l3hu26jsy1telh9chgu": {
+   "precio": "229 €",
+   "detalle": {
+    "256GB": 229.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-y21-5g-champagne-gold-256gb-4gb-ram-6-74-1200-nit-mediatek-dimensity-6300-6500mah-auriculares-tws-3e-cargador-flashcharger-44w",
+   "pack": false,
+   "agotado": false
+  },
+  "ps3nl3rocvkph8bp6e9q": {
+   "precio": "179 €",
+   "detalle": {
+    "128GB": 179.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-y21d-lavanda-purple-128gb-4gb-ram-6-68-lcd-unisoc-ums9230-6500-mah",
+   "pack": false,
+   "agotado": false
+  },
+  "52casqiusu0bl240tnqv": {
+   "precio": "249 €",
+   "detalle": {
+    "256GB": 249.0
+   },
+   "url": "https://canarias.mediamarkt.es/products/movil-vivo-y31-marble-white-256gb-6gb-ram-6-72-lcd-qualcomm-snapdragon-r-4-gen-2-6500-mah",
+   "pack": false,
+   "agotado": false
+  }
+ }
+}
